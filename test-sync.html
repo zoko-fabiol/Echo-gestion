@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Synchronisation Dexie</title>
+    <script src="libs/dexie.min.js"></script>
+    <script src="./db-config.js"></script>
+    <script src="./storage-adapter.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #0f5132;
+        }
+        
+        .test-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-left: 4px solid #0f5132;
+            background: #f9f9f9;
+        }
+        
+        button {
+            background: #0f5132;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background: #198754;
+        }
+        
+        .result {
+            background: #e7f3ff;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        a {
+            color: #0f5132;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔄 Test de Synchronisation via Dexie</h1>
+
+        <div class="test-section">
+            <h2>ℹ️ Architecture Dexie Séparée</h2>
+            <p>✅ <strong>StockExpertDB:</strong> Données stock (stock.html uniquement)</p>
+            <p>✅ <strong>RH_AppDB:</strong> Données RH (index.html uniquement)</p>
+            <p>✅ <strong>SharedSettingsDB:</strong> Paramètres partagés (logo, couleur, entreprise, backup)</p>
+            <p style="color: green; font-weight: bold;">→ Les données de chaque app restent séparées. SEULS les paramètres sont synchronisés.</p>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Test 1: Vérifier SharedSettingsDB appSettings</h2>
+            <p style="font-size: 12px; color: #666;">Base partagée pour les paramètres (logo, couleur, entreprise)</p>
+            <button onclick="checkSharedSettings()">Afficher SharedSettingsDB</button>
+            <div id="storage-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎨 Test 2: Modifier la Couleur du Thème</h2>
+            <p>Via Dexie (qui sera synchro entre les pages)</p>
+            <button onclick="setThemeColor('#ff0000')">Rouge</button>
+            <button onclick="setThemeColor('#00ff00')">Vert</button>
+            <button onclick="setThemeColor('#0000ff')">Bleu</button>
+            <button onclick="setThemeColor('#14522D')">Vert Défaut</button>
+            <div id="theme-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🏢 Test 3: Modifier l'Entreprise</h2>
+            <input type="text" id="company-name" placeholder="Nom" value="Test Company">
+            <button onclick="setCompanyInfo()">Enregistrer via Dexie</button>
+            <div id="company-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📡 Test 4: Vérifier localStorage (Wrapper Dexie)</h2>
+            <button onclick="checkWrappedLocalStorage()">Afficher localStorage Wrapper</button>
+            <div id="wrapped-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔗 Accès aux Applications</h2>
+            <p>
+                <a href="index.html" target="_blank">📊 Gestion RH (index.html)</a> &nbsp;|&nbsp;
+                <a href="stock.html" target="_blank">📦 Gestion Stock (stock.html)</a>
+            </p>
+            <p style="font-size: 12px; color: #666;">
+                ✅ Modifiez une couleur ou l'entreprise ici, puis vérifiez que les changements apparaissent dans stock.html et index.html sans rechargement!
+            </p>
+        </div>
+
+        <div class="test-section">
+            <h2>🔄 Test 5: Vérifier la Migration</h2>
+            <p style="font-size: 12px; color: #666;">Teste si les anciennes données du localStorage natif sont migrées vers Dexie</p>
+            <button onclick="testMigration()">Tester Migration</button>
+            <div id="migration-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>⚠️ Danger Zone</h2>
+            <button onclick="simulateOldData()" style="background: #ff9800;">Simuler Anciennes Données (TEST)</button>
+            <p style="font-size: 12px; color: #666;">Ajoute des données au localStorage natif pour tester la migration</p>
+            <div id="danger-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const LOGO_KEY = 'stock_expert_logo';
+        const THEME_COLOR_KEY = 'stock_expert_theme_color';
+        const COMPANY_KEY = 'stock_expert_company';
+        const GLASS_ENABLED_KEY = 'stock_expert_glass_enabled';
+        const BACKUP_SCHEDULE_KEY = 'stock_expert_backup_schedule_v1';
+
+        async function checkSharedSettings() {
+            const result = document.getElementById('storage-result');
+            try {
+                const items = await sharedDb.appSettings.toArray();
+                if (items.length === 0) {
+                    result.innerHTML = '<div class="error">❌ Aucune donnée dans SharedSettingsDB.appSettings</div>';
+                    return;
+                }
+                
+                let html = '<div class="success">✅ Paramètres Partagés dans SharedSettingsDB:</div><br>';
+                items.forEach(item => {
+                    const value = item.value;
+                    let displayValue = value;
+                    if (item.key === LOGO_KEY) {
+                        displayValue = '(Base64 Image - ' + value.substring(0, 50) + '...)';
+                    } else if (item.key === COMPANY_KEY) {
+                        displayValue = JSON.stringify(value, null, 2);
+                    }
+                    html += `<strong>${item.key}:</strong>\n${displayValue}\n\n`;
+                });
+                result.innerHTML = html;
+            } catch (err) {
+                result.innerHTML = '<div class="error">❌ Erreur: ' + err.message + '</div>';
+            }
+        }
+
+        async function setThemeColor(color) {
+            const result = document.getElementById('theme-result');
+            try {
+                // Via le wrapper localStorage qui pousse à Dexie
+                localStorage.setItem(THEME_COLOR_KEY, color);
+                
+                // Également via syncDataAcrossPages si disponible
+                if (typeof syncDataAcrossPages !== 'undefined') {
+                    await syncDataAcrossPages('appSettings', 'put', {key: THEME_COLOR_KEY, value: color});
+                }
+                
+                result.innerHTML = '<div class="success">✅ Couleur définie sur ' + color + ' via Dexie. Vérifiez dans stock.html et index.html!</div>';
+                document.documentElement.style.setProperty('--brand-green', color);
+                document.documentElement.style.setProperty('--brand-dark', color);
+            } catch (err) {
+                result.innerHTML = '<div class="error">❌ Erreur: ' + err.message + '</div>';
+            }
+        }
+
+        async function setCompanyInfo() {
+            const result = document.getElementById('company-result');
+            const name = document.getElementById('company-name').value;
+            try {
+                const company = {
+                    name: name,
+                    contact: 'Test Contact',
+                    footer: 'Test Footer'
+                };
+                
+                localStorage.setItem(COMPANY_KEY, JSON.stringify(company));
+                
+                if (typeof syncDataAcrossPages !== 'undefined') {
+                    await syncDataAcrossPages('appSettings', 'put', {key: COMPANY_KEY, value: JSON.stringify(company)});
+                }
+                
+                result.innerHTML = '<div class="success">✅ Entreprise définie: ' + JSON.stringify(company, null, 2) + '</div>';
+            } catch (err) {
+                result.innerHTML = '<div class="error">❌ Erreur: ' + err.message + '</div>';
+            }
+        }
+
+        async function checkWrappedLocalStorage() {
+            const result = document.getElementById('wrapped-result');
+            try {
+                const logo = localStorage.getItem(LOGO_KEY);
+                const color = localStorage.getItem(THEME_COLOR_KEY);
+                const company = localStorage.getItem(COMPANY_KEY);
+                
+                let html = '<div class="success">✅ localStorage Wrapper (Dexie backend):</div><br>';
+                html += `<strong>${LOGO_KEY}:</strong> ${logo ? '✅ Présent (' + logo.substring(0, 30) + '...)' : '❌ Absent'}\n\n`;
+                html += `<strong>${THEME_COLOR_KEY}:</strong> ${color ? '✅ ' + color : '❌ Absent'}\n\n`;
+                html += `<strong>${COMPANY_KEY}:</strong> ${company ? '✅ ' + company : '❌ Absent'}\n`;
+                result.innerHTML = html;
+            } catch (err) {
+                result.innerHTML = '<div class="error">❌ Erreur: ' + err.message + '</div>';
+            }
+        }
+
+        async function clearDexie() {
+            const result = document.getElementById('clear-result');
+            try {
+                await sharedDb.appSettings.clear();
+                result.innerHTML = '<div class="success">✅ Dexie appSettings effacé!</div>';
+            } catch (err) {
+                result.innerHTML = '<div class="error">❌ Erreur: ' + err.message + '</div>';
+            }
+        }
+
+        async function testMigration() {
+            const result = document.getElementById('migration-result');
+            try {
+                const nativeCount = nativeLocalStorage.length || 0;
+                const dexieCount = await sharedDb.appSettings.count();
+                
+                let html = '<div class="success">✅ Rapport Migration:</div><br>';
+                html += `<strong>localStorage natif:</strong> ${nativeCount} clés<br>`;
+                html += `<strong>Dexie (sharedDb):</strong> ${dexieCount} entrées<br>`;
+                
+                if (nativeCount > 0 && dexieCount > 0) {
+                    html += '<p style="color: green; font-weight: bold;">✓ Migration semble complète!</p>';
+                } else if (nativeCount > 0 && dexieCount === 0) {
+                    html += '<p style="color: orange;">⚠️ Données native trouvées mais Dexie vide. Rechargez la page pour déclencher la migration.</p>';
+                } else {
+                    html += '<p style="color: blue;">ℹ️ Pas de données à migrer.</p>';
+                }
+                
+                result.innerHTML = html;
+            } catch (err) {
+                result.innerHTML = '<div class="error">❌ Erreur: ' + err.message + '</div>';
+            }
+        }
+
+        async function simulateOldData() {
+            const result = document.getElementById('danger-result');
+            try {
+                // Ajouter des données de test au localStorage natif
+                const testData = {
+                    employees: [
+                        { id: 1, nom: 'Dupont', prenom: 'Jean', site: 'Douala', type: 'permanent', statut: 'actif' },
+                        { id: 2, nom: 'Martin', prenom: 'Marie', site: 'Yaoundé', type: 'temporaire', statut: 'actif' }
+                    ],
+                    attendance: { '1': { '2025-01-01': 'present' } },
+                    payrollExtras: {}
+                };
+                
+                nativeLocalStorage.setItem('rh_app_data', JSON.stringify(testData));
+                nativeLocalStorage.setItem('stock_expert_theme_color', '#ff6600');
+                nativeLocalStorage.setItem('stock_expert_logo', 'data:image/png;base64,iVBORw0KGgo...');
+                
+                result.innerHTML = '<div class="success">✅ Données de test ajoutées au localStorage natif!<br><br>Rechargez la page pour déclencher la migration.</div>';
+            } catch (err) {
+                result.innerHTML = '<div class="error">❌ Erreur: ' + err.message + '</div>';
+            }
+        }
+
+        // Référence au localStorage natif avant qu'il soit overwrité
+        const nativeLocalStorage = window.localStorage;
+    </script>
+</body>
+
+</html>

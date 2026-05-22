@@ -1,0 +1,21 @@
+{
+  "name": "Echos De chez Moi",
+  "short_name": "RH - Echos",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#14522D",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "image_circulaire_recadree.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "image_circulaire_recadree.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

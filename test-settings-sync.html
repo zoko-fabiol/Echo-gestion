@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Settings Sync</title>
+</head>
+<body>
+    <h1>Test Settings Sync between stock.html and index.html</h1>
+    
+    <h2>Instructions:</h2>
+    <ol>
+        <li>Open stock.html and index.html in side-by-side browser tabs</li>
+        <li>In stock.html, go to Settings tab</li>
+        <li>Change the theme color (e.g., select a different color)</li>
+        <li>Click "Enregistrer les paramètres"</li>
+        <li>Switch to index.html tab</li>
+        <li>Verify that the color changed in index.html</li>
+        <li>Repeat for logo upload and company name changes</li>
+    </ol>
+    
+    <h2>What to verify:</h2>
+    <ul>
+        <li>Logo changes sync between pages</li>
+        <li>Theme color changes sync between pages</li>
+        <li>Company name changes sync between pages</li>
+        <li>Backup schedule changes are visible (though mainly internal)</li>
+    </ul>
+    
+    <h2>Browser Console Output:</h2>
+    <p>Check browser console (F12) for debug logs starting with [index] or showing sync confirmations</p>
+    
+    <p><a href="stock.html">Open stock.html</a> | <a href="index.html">Open index.html</a></p>
+</body>
+</html>

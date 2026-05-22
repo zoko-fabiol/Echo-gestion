@@ -1,0 +1,79 @@
+N/O;Name (Matière Première);Category;Stock de base;Vendu;Disponible;Prix Pièce;ToTal;Unité
+;;;;;;;;
+1;Arachides Crues (Décortiquées);Grains;;;0;;0;Kg / Sac
+2;Maïs Grain Sec (Jaune/Blanc);Céréale;;;0;;0;Kg / Sac
+3;Graines de Sésame Crues;Grains;;;0;;0;Kg
+4;Graines de Courge (Pistache);Grains;;;0;;0;Kg / Seau
+5;Haricot Rouge Sec;Grains;;;0;;0;Kg / Sac
+6;Graines de Koki (Cornille);Grains;;;0;;0;Kg / Seau
+7;Graines de Soja;Grains;;;0;;0;Kg / Sac
+8;Riz (Grain ou Brisure);Céréale;;;0;;0;Kg / Sac
+9;Egusi (Pour Pistache);Grains;;;0;;0;Kg
+;;;;;;;;
+10;Feuilles de Ndole (Amer);Légume Frais;;;0;;0;Botte
+11;Feuilles de Eru (Okok);Légume Frais;;;0;;0;Botte
+12;Waterleaf (Épinard pour Eru);Légume Frais;;;0;;0;Botte
+13;Feuilles de Djama Djama;Légume Frais;;;0;;0;Botte
+14;Feuilles de Manioc (Pondu);Légume Frais;;;0;;0;Botte
+15;Feuilles de Felon;Légume Frais;;;0;;0;Botte
+16;Feuilles de Okoribon;Légume Frais;;;0;;0;Botte
+17;Feuilles de Zoumkak;Légume Frais;;;0;;0;Botte
+18;Oseille de Guinée (Foléré);Légume/Boisson;;;0;;0;Kg
+Tubercules;;;;;;;;
+19;Tubercule de Manioc (Roui);Tubercule;;;0;;0;Sac
+20;Tubercule de Manioc (Frais);Tubercule;;;0;;0;Sac
+21;Patate Douce (Si applicable);Tubercule;;;0;;0;Sac
+;;;;;;;;
+22;Oignon Rouge;Aromate;;;0;;0;Filet
+23;Oignon Blanc;Aromate;;;0;;0;Filet
+24;Ail Gousses;Aromate;;;0;;0;Filet
+25;Gingembre Racine;Aromate;;;0;;0;Filet
+26;Poireau (Tige/Feuille);Aromate;;;0;;0;Botte
+27;Céleri (Branche);Aromate;;;0;;0;Botte
+28;Persil;Aromate;;;0;;0;Botte
+29;Basilic (Kotimandjo);Aromate;;;0;;0;Botte
+30;Piment Frais (Jaune/Rouge);Aromate;;;0;;0;Kg
+;;;;;;;;
+31;Poivre Blanc de Penja;Épice;;;0;;0;Kg
+32;Poivre Noir (Grains);Épice;;;0;;0;Kg
+33;Djansan (Grains entiers);Épice;;;0;;0;Kg
+34;Pèbè (Noix de Muscade Africaine);Épice;;;0;;0;Kg
+35;Rondelle (Tree Garlic);Épice;;;0;;0;Kg
+36;4 Côtés (Tetrapleura);Épice;;;0;;0;Pièce
+37;Écorce de Cannelle;Épice;;;0;;0;Kg
+38;Clou de Girofle;Épice;;;0;;0;Kg
+39;Anis Vert / Fenouil;Épice;;;0;;0;Kg
+40;Cumin;Épice;;;0;;0;Kg
+41;Racine de Curcuma;Épice;;;0;;0;Kg
+42;Hiomi (Écorce pour Bongo);Épice;;;0;;0;Paquet
+43;"Épice ""Burned"" (Bongo)";Épice;;;0;;0;Kg
+44;Thym Séché;Herbe;;;0;;0;Kg
+45;Feuilles de Laurier;Herbe;;;0;;0;Kg
+46;Curry (Mélange Poudre);Épice;;;0;;0;Kg
+;;;;;;;;
+47;Noix de Coco (Sec);Fruit;;;0;;0;Filet
+48;Ananas;Fruit;;;0;;0;Pièce
+49;Pastèque;Fruit;;;0;;0;Pièce
+50;Papaye;Fruit;;;0;;0;Pièce
+51;Citron (Vert/Jaune);Fruit;;;0;;0;Filet
+52;Prune (Safou);Fruit;;;0;;0;Caisse
+53;Régime de Noix de Palme;Fruit;;;0;;0;Régime
+54;Pamplemousse;Fruit;;;0;;0;Filet
+55;Bitter Kola (Petit Kola);Fruit;;;0;;0;Kg
+;;;;;;;;
+56;Huile de Palme (Rouge);Huile;;;0;;0;Bidon
+57;Huile Raffinée (Végétale);Huile;;;0;;0;Bidon
+58;Sel de Cuisine;Intrant;;;0;;0;Sac
+59;Sel Gemme (Kanwa);Intrant;;;0;;0;Kg
+60;Sucre Blanc/Roux;Intrant;;;0;;0;Sac
+61;Cube d'assaisonnement (Maggi..);Intrant;;;0;;0;Paquet
+62;Écrevisses Séchées (Njanga);Intrant;;;0;;0;Kg / Sac
+63;Poisson Fumé (Pour Eru/Ndole);Intrant;;;0;;0;Panier
+;;;;;;;;
+64;Feuilles de Bananier (Koki/Miondo);Emballage;;;0;;0;Paquet
+65;"Feuilles ""Attache"" (Bobolo)";Emballage;;;0;;0;Paquet
+66;Ficelle / Raffia (Bambou);Emballage;;;0;;0;Botte
+67;Sachets Plastiques (Conditionnement);Emballage;;;0;;0;Paquet
+68;Bouteilles Plastiques (Jus/Huile);Emballage;;;0;;0;Ballot
+69;Étiquettes Autocollantes;Emballage;;;0;;0;Rouleau
+70;Gaz (Combustible);Energie;;;0;;0;Bouteille

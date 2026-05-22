@@ -1,0 +1,3498 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <script>
+        (function() {
+            if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+                const sessionStr = localStorage.getItem('stock_expert_user_session');
+                let isAuthenticated = false;
+                if (sessionStr) {
+                    try {
+                        const session = JSON.parse(sessionStr);
+                        if (session && session.email && session.role) {
+                            isAuthenticated = true;
+                        }
+                    } catch (e) {}
+                }
+                if (!isAuthenticated) {
+                    window.location.replace('index.html');
+                }
+            }
+        })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RH - Echos De chez Moi</title>
+
+    <script src="libs/tailwindcss.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            green: '#14522D',
+                            dark: '#14522D',
+                            yellow: '#f59e0b',
+                            red: '#ef4444',
+                            light: '#f3f4f6',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="libs/fontawesome/css/all.min.css">
+
+    <script src="libs/vue.global.js"></script>
+
+    <style>
+        /* Empêche l'affichage des templates moustache avant que Vue ne prenne le contrôle */
+        [v-cloak] {
+            display: none !important;
+        }
+
+        /* Variables et bases */
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-light);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        :root {
+            --brand-green: #14522D;
+            --brand-dark: #14522D;
+            --brand-yellow: #f59e0b;
+            --brand-red: #ef4444;
+            --bg-light: #f3f4f6;
+            --bg-dark: #1f2937;
+            --text-light: #111827;
+            --text-dark: #f9fafb;
+            --glass-opacity: 1;
+            --glass-opacity-light: 0.62;
+            --glass-opacity-dark: 0.04;
+        }
+
+        .fade-enter-active,
+        .fade-leave-active {
+            transition: opacity 0.2s;
+        }
+
+        .fade-enter-from,
+        .fade-leave-to {
+            opacity: 0;
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #0f5132;
+            border-radius: 4px;
+        }
+
+        .status-btn {
+            transition: all 0.2s;
+        }
+
+        .status-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* === LIQUID GLASS STYLES === */
+
+        :root {
+            --global-border-radius: 0.6rem;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, var(--glass-opacity-light));
+            backdrop-filter: blur(10px) saturate(100%);
+            -webkit-backdrop-filter: blur(10px) saturate(100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--global-border-radius);
+            transition: all 0.3s ease;
+        }
+
+        .dark .glass {
+            background: rgba(255, 255, 255, var(--glass-opacity-dark));
+        }
+
+        .glass.interactive {
+            cursor: pointer;
+        }
+
+        .glass.interactive:hover {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px) saturate(110%);
+            -webkit-backdrop-filter: blur(15px) saturate(110%);
+            transform: translateY(-2px) scale(1.02);
+            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+
+        .glass.interactive:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        html.no-glass .glass {
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border: 1px solid rgba(200, 200, 200, 0.3);
+        }
+
+        html.no-glass .glass.interactive:hover {
+            background: rgba(220, 220, 220, 0.1);
+            backdrop-filter: none;
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        /* === DARK MODE GLASS TEXTBOX FIX === */
+
+        .dark .glass input[type="text"]:focus,
+        .dark .glass input[type="email"]:focus,
+        .dark .glass input[type="tel"]:focus,
+        .dark .glass input[type="password"]:focus,
+        .dark .glass textarea:focus,
+        .dark .glass input[type="number"]:focus {
+            color: #000 !important;
+            font-weight: bold;
+        }
+
+        .dark .glass input[type="text"],
+        .dark .glass input[type="email"],
+        .dark .glass input[type="tel"],
+        .dark .glass input[type="password"],
+        .dark .glass textarea,
+        .dark .glass input[type="number"] {
+            color: #fff !important;
+        }
+
+        /* === GLOBAL BORDER RADIUS OVERRIDES === */
+
+        :root {
+            --global-border-radius: 0.6rem;
+        }
+
+        .rounded-2xl,
+        .rounded-xl,
+        .rounded-lg,
+        .rounded-md,
+        .rounded-sm,
+        .rounded {
+            border-radius: var(--global-border-radius) !important;
+        }
+
+        header,
+        aside,
+        main,
+        .bg-white,
+        .bg-brand-green,
+        .bg-gray-50,
+        .bg-gray-100,
+        .modal,
+        .toast,
+        .card,
+        .panel,
+        ul,
+        ol,
+        .listbox,
+        .dropdown,
+        .menu,
+        .menu-item,
+        .options-panel,
+        .select-options,
+        .choices__list,
+        .choices__item,
+        .v-select,
+        .vue-select,
+        .select-dropdown,
+        .select2-container .select2-selection--single,
+        .select2-results {
+            border-radius: var(--global-border-radius) !important;
+        }
+
+        input,
+        textarea,
+        select,
+        button {
+            border-radius: calc(var(--global-border-radius) / 1.2) !important;
+        }
+
+        [role="listbox"],
+        [role="menu"],
+        .dropdown-menu,
+        .dropdown-content,
+        .menu-list,
+        .menu,
+        .menu-item,
+        .options-panel,
+        .select-options,
+        .choices__list,
+        .choices__list--dropdown,
+        .choices__item,
+        .select__menu,
+        .select-dropdown,
+        .select2-container .select2-selection--single,
+        .select2-dropdown,
+        .select2-results__options,
+        .v-popper,
+        .popper,
+        .tippy-box,
+        .popover {
+            border-radius: var(--global-border-radius) !important;
+            overflow: hidden;
+        }
+
+        /* Dark Mode Overrides */
+
+        html.dark {
+            color-scheme: dark;
+        }
+
+        html.dark body {
+            background-color: #1f2937;
+            color: #f3f4f6;
+        }
+
+        html.dark .bg-white {
+            background-color: #374151;
+            color: #f3f4f6;
+        }
+
+        html.dark .text-white {
+            color: #f3f4f6;
+        }
+
+        html.dark .bg-gray-50 {
+            background-color: #111827;
+        }
+
+        html.dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+
+        html.dark .bg-brand-green {
+            background-color: #0f5132;
+        }
+
+        html.dark .border-white {
+            border-color: #374151;
+        }
+
+        html.dark .text-gray-800,
+        html.dark .text-gray-700,
+        html.dark .text-gray-600,
+        html.dark .text-gray-500,
+        html.dark .text-gray-900 {
+            color: #e5e7eb;
+        }
+
+        html.dark .bg-green-50 {
+            background-color: #111827;
+        }
+
+        html.dark .border-gray-200,
+        html.dark .border-gray-100 {
+            border-color: #4b5563;
+        }
+
+        html.dark .shadow-sm,
+        html.dark .shadow,
+        html.dark .shadow-lg {
+            --tw-shadow-color: rgba(0, 0, 0, 0.5);
+        }
+
+        html.dark .border-b,
+        html.dark .border-t,
+        html.dark .border-r,
+        html.dark .border-l {
+            border-color: #4b5563;
+        }
+
+        html.dark .divide-gray-200>*+* {
+            border-color: #4b5563;
+        }
+
+        html.dark input,
+        html.dark textarea,
+        html.dark select {
+            background-color: #1f2937;
+            color: #f3f4f6;
+            border-color: #4b5563;
+        }
+
+        html.dark input:focus,
+        html.dark textarea:focus,
+        html.dark select:focus {
+            border-color: #10b981;
+            background-color: #111827;
+        }
+
+        html.dark .bg-red-50 {
+            background-color: #7f1d1d;
+        }
+
+        html.dark .text-red-600 {
+            color: #fca5a5;
+        }
+
+        .bg-brand {
+            background-color: var(--brand-green);
+        }
+
+        .text-brand {
+            color: var(--brand-green);
+        }
+
+        .btn-brand {
+            background-color: var(--brand-green);
+            color: white;
+            transition: background-color 0.2s;
+        }
+
+        .btn-brand:hover {
+            background-color: var(--brand-dark);
+        }
+
+        .tablehead th {
+            background-color: var(--brand-dark);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+            padding: 12px 8px;
+            white-space: nowrap;
+        }
+
+        .today-cell {
+            background-color: #FEFCE7 !important;
+            color: #1f2937 !important;
+            font-weight: 700 !important;
+        }
+
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+            width: 256px;
+            z-index: 20;
+        }
+
+        #sidebar.open {
+            transform: translateX(0);
+        }
+
+        @media (min-width: 1024px) {
+            #sidebar {
+                position: relative;
+                transform: none !important;
+                width: 256px !important;
+            }
+
+            #mobileSidebarToggle {
+                display: none !important;
+            }
+
+            #app.sidebar-collapsed #sidebar {
+                width: 80px !important;
+            }
+
+            #app.sidebar-collapsed .sidebar-text {
+                opacity: 0;
+                width: 0;
+                overflow: hidden;
+                margin-left: -5px;
+                transition: opacity 0.1s, width 0.1s, margin 0.1s;
+                display: none;
+            }
+
+            #app.sidebar-collapsed #sidebar .fa-solid {
+                margin: 0 auto;
+            }
+
+            #app.sidebar-collapsed #sidebar nav button,
+            #app.sidebar-collapsed #sidebar nav a {
+                justify-content: center;
+            }
+        }
+
+        #overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        #overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation: none;
+            mix-blend-mode: normal;
+        }
+
+        /* Style spécifique pour cellules bloquées (avant embauche ou après renvoi) */
+
+        .cell-renvoye {
+            background-color: #e5e7eb !important;
+            background-image: linear-gradient(45deg, #d1d5db 25%, transparent 25%, transparent 50%, #d1d5db 50%, #d1d5db 75%, transparent 75%, transparent);
+            background-size: 4px 4px;
+            cursor: not-allowed;
+        }
+
+        html.dark .cell-renvoye {
+            background-color: #374151 !important;
+            background-image: linear-gradient(45deg, #4b5563 25%, transparent 25%, transparent 50%, #4b5563 50%, #4b5563 75%, transparent 75%, transparent);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 h-screen overflow-hidden">
+
+    <div id="app" v-cloak class="flex h-full">
+
+        <div id="overlay"></div>
+
+        <button id="mobileSidebarToggle"
+            class="fixed top-4 left-4 z-30 lg:hidden bg-brand-green text-white p-3 rounded-full shadow-lg focus:outline-none transition-transform duration-300">
+            <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+
+        <aside id="sidebar" class="w-64 bg-brand-green text-white flex flex-col shadow-2xl z-20">
+            <div class="p-6 text-center border-b border-brand-green bg-brand-green">
+                <div
+                    class="w-full h-24 bg-white rounded-lg flex items-center justify-center overflow-hidden border-2 border-brand-yellow">
+                    <img v-if="logoSrc" :src="logoSrc" class="w-full h-full object-contain p-1">
+                    <div v-else class="text-gray-400 text-xs flex flex-col items-center">
+                        <i class="fa-solid fa-image text-2xl mb-1"></i>
+                        <span class="sidebar-text">Logo depuis Stock</span>
+                    </div>
+                </div>
+
+                <h1 class="text-xl font-bold mt-4 tracking-wide text-brand-yellow sidebar-text">{{ companyName || '' }}
+                </h1>
+                <p class="text-[10px] text-green-200 uppercase tracking-widest mt-1 sidebar-text">Gestion RH</p>
+            </div>
+
+            <nav class="flex-1 py-6 space-y-2 px-2">
+                <button @click="currentTab = 'dashboard'"
+                    :class="{'bg-white text-brand-green font-bold shadow-lg transform translate-x-1': currentTab === 'dashboard', 'text-green-100 hover:bg-green-800': currentTab !== 'dashboard'}"
+                    class="w-full text-left px-4 py-3 rounded-lg flex items-center transition-all duration-200">
+                    <i class="fa-solid fa-chart-pie w-8 text-center"></i> <span class="sidebar-text">Tableau de
+                        Bord</span>
+                </button>
+                <button @click="currentTab = 'employes'"
+                    :class="{'bg-white text-brand-green font-bold shadow-lg transform translate-x-1': currentTab === 'employes', 'text-green-100 hover:bg-green-800': currentTab !== 'employes'}"
+                    class="w-full text-left px-4 py-3 rounded-lg flex items-center transition-all duration-200">
+                    <i class="fa-solid fa-user-tie w-8 text-center"></i> <span class="sidebar-text">Employés</span>
+                </button>
+                <button @click="currentTab = 'pointage'"
+                    :class="{'bg-white text-brand-green font-bold shadow-lg transform translate-x-1': currentTab === 'pointage', 'text-green-100 hover:bg-green-800': currentTab !== 'pointage'}"
+                    class="w-full text-left px-4 py-3 rounded-lg flex items-center transition-all duration-200">
+                    <i class="fa-solid fa-calendar-check w-8 text-center"></i> <span
+                        class="sidebar-text">Pointage</span>
+                </button>
+                <button @click="currentTab = 'salaires'"
+                    :class="{'bg-white text-brand-green font-bold shadow-lg transform translate-x-1': currentTab === 'salaires', 'text-green-100 hover:bg-green-800': currentTab !== 'salaires'}"
+                    class="w-full text-left px-4 py-3 rounded-lg flex items-center transition-all duration-200">
+                    <i class="fa-solid fa-money-bill-wave w-8 text-center"></i> <span
+                        class="sidebar-text">Salaires</span>
+                </button>
+                <a href="stock.html"
+                    class="w-full text-left px-4 py-3 rounded-lg flex items-center text-green-100 hover:bg-green-800 transition-all duration-200">
+                    <i class="fa-solid fa-boxes w-8 text-center"></i> <span class="sidebar-text">Gestion Stock</span>
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-brand-green bg-brand-green space-y-2">
+                <div class="text-[10px] font-bold text-brand-yellow uppercase text-center sidebar-text">Administration
+                </div>
+                <div class="flex gap-2 sidebar-text">
+                    <button @click="downloadBackup"
+                        class="flex-1 bg-brand-lightGreen hover:bg-green-500 text-white py-2 px-2 rounded text-xs flex flex-col items-center justify-center gap-1 transition shadow">
+                        <i class="fa-solid fa-download"></i> Backup
+                    </button>
+                    <button @click="backupInput.click()"
+                        class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 px-2 rounded text-xs flex flex-col items-center justify-center gap-1 transition shadow">
+                        <i class="fa-solid fa-upload"></i> Restore
+                    </button>
+                    <input type="file" ref="backupInput" @change="restoreBackup" class="hidden" accept=".json">
+                </div>
+                <button @click="resetAllData"
+                    class="w-full bg-red-800 hover:bg-red-600 text-white py-1 px-2 rounded text-xs flex items-center justify-center gap-2 transition opacity-80 hover:opacity-100 sidebar-text">
+                    <i class="fa-solid fa-trash-alt"></i> Tout Effacer
+                </button>
+            </div>
+        </aside>
+
+        <main id="mainContent" class="flex-1 flex flex-col overflow-hidden relative bg-gray-50">
+
+            <header
+                class="bg-white shadow-sm border-b border-gray-200 h-16 flex items-center justify-between px-4 sm:px-8 z-10">
+                <div class="flex items-center gap-3">
+                    <button id="desktopSidebarToggle"
+                        class="hidden lg:block bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition shadow-sm">
+                        <i class="fa-solid fa-bars text-lg"></i>
+                    </button>
+
+                    <h2 class="text-xl sm:text-2xl font-bold text-brand-green uppercase font-serif">
+                        <span v-if="currentTab === 'dashboard'">Tableau de Bord</span>
+                        <span v-if="currentTab === 'employes'">Effectifs</span>
+                        <span v-if="currentTab === 'pointage'">Présences</span>
+                        <span v-if="currentTab === 'salaires'">Paie</span>
+                    </h2>
+                    <span
+                        class="bg-brand-yellow text-brand-green text-xs font-bold px-2 py-1 rounded shadow-sm hidden sm:inline-block">
+                        {{ new Date().toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long', year:
+                        'numeric'}) }}
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <div v-if="currentTab !== 'employes'"
+                        class="flex bg-gray-100 rounded-lg p-1 border border-gray-200">
+                        <select v-model="filters.month"
+                            class="bg-transparent text-xs sm:text-sm font-semibold text-gray-700 px-1 sm:px-2 outline-none cursor-pointer">
+                            <option v-for="(m, index) in months" :value="index" :key="index">{{ m.substring(0, 3) }}
+                            </option>
+                        </select>
+                        <div class="w-px bg-gray-300 mx-1 my-1 hidden sm:block"></div>
+                        <select v-model="filters.year"
+                            class="bg-transparent text-xs sm:text-sm font-bold text-brand-green px-1 sm:px-2 outline-none cursor-pointer">
+                            <option v-for="y in [2024, 2025, 2026]" :value="y" :key="y">{{ y }}</option>
+                        </select>
+                    </div>
+
+                    <select v-model="filters.site"
+                        class="bg-white border border-gray-300 text-gray-700 text-xs sm:text-sm rounded-lg focus:ring-2 focus:ring-brand-green focus:border-brand-green block p-1.5 sm:p-2.5 shadow-sm">
+                        <option value="">Tous les sites</option>
+                        <option v-for="site in sites" :value="site">{{ site.substring(0, 5) }}</option>
+                    </select>
+
+                    <button @click="toggleTheme"
+                        class="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition shadow-sm">
+                        <i class="fa-solid fa-moon text-lg"></i>
+                    </button>
+
+                    <!-- Bouton pour lancer le tutoriel (Test) -->
+                    <button onclick="startTutorialIndex()"
+                        class="ml-2 bg-brand hover:opacity-95 text-white px-3 py-1 rounded-lg text-xs font-semibold shadow-sm">
+                        <i class="fa-solid fa-circle-info mr-2"></i>Tutoriel
+                    </button>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-auto p-4 lg:p-8 custom-scroll">
+
+                <div v-if="currentTab === 'dashboard'" class="space-y-6 animate-fade-in-up">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div
+                            class="bg-white p-6 rounded-2xl shadow-lg border-b-4 border-brand-green flex items-center justify-between relative overflow-hidden group">
+                            <div class="z-10">
+                                <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Effectif Total
+                                </p>
+                                <h3 class="text-3xl font-bold text-gray-800 mt-1">{{ kpiData.totalEmployees }}</h3>
+                                <p
+                                    class="text-xs text-green-600 mt-2 font-medium bg-green-50 px-2 py-1 rounded inline-block">
+                                    <i class="fa-solid fa-users"></i> {{ kpiData.activeEmployees }} Actifs
+                                </p>
+                            </div>
+                            <div
+                                class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-brand-green text-2xl group-hover:scale-110 transition-transform duration-300">
+                                <i class="fa-solid fa-user-group"></i>
+                            </div>
+                            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-brand-green opacity-5 rounded-full">
+                            </div>
+                        </div>
+
+                        <div
+                            class="bg-white p-6 rounded-2xl shadow-lg border-b-4 border-brand-yellow flex items-center justify-between relative overflow-hidden group">
+                            <div class="z-10">
+                                <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Masse Salariale
+                                </p>
+                                <h3 class="text-2xl font-bold text-gray-800 mt-1 truncate">{{
+                                    formatMoney(kpiData.totalPayroll) }}</h3>
+                                <p
+                                    class="text-xs text-yellow-700 mt-2 font-medium bg-yellow-50 px-2 py-1 rounded inline-block">
+                                    {{ months[filters.month] }} {{ filters.year }}
+                                </p>
+                            </div>
+                            <div
+                                class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600 text-2xl group-hover:scale-110 transition-transform duration-300">
+                                <i class="fa-solid fa-coins"></i>
+                            </div>
+                            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-brand-yellow opacity-5 rounded-full">
+                            </div>
+                        </div>
+
+                        <div
+                            class="bg-white p-6 rounded-2xl shadow-lg border-b-4 border-blue-500 flex items-center justify-between relative overflow-hidden group">
+                            <div class="z-10">
+                                <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Présence
+                                    Aujourd'hui</p>
+                                <div class="flex items-end gap-2">
+                                    <h3 class="text-3xl font-bold text-gray-800 mt-1">{{ kpiData.attendanceRate }}%</h3>
+                                    <span class="text-xs text-gray-400 mb-1">({{ kpiData.presentCount }}/{{
+                                        kpiData.activeEmployees }})</span>
+                                </div>
+                                <p
+                                    class="text-xs text-blue-600 mt-2 font-medium bg-blue-50 px-2 py-1 rounded inline-block">
+                                    <i class="fa-solid fa-clock"></i> Temps réel
+                                </p>
+                            </div>
+                            <div
+                                class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-2xl group-hover:scale-110 transition-transform duration-300">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </div>
+                            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500 opacity-5 rounded-full"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+                            <h4 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-pie text-brand-green"></i> Répartition par Site
+                            </h4>
+                            <div class="relative h-64 w-full flex justify-center">
+                                <canvas ref="pieChartEl"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+                            <h4 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-simple text-purple-600"></i> Activité Temporaires
+                            </h4>
+                            <div class="relative h-64 w-full flex justify-center">
+                                <canvas ref="tempChartEl"></canvas>
+                            </div>
+                            <p class="text-center text-xs text-gray-500 mt-2">Pourcentage de temporaires ayant travaillé
+                                ce mois</p>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+                            <h4 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-bar text-brand-green"></i> Coût Salarial par Site
+                            </h4>
+                            <div class="relative h-64 w-full">
+                                <canvas ref="barChartEl"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="currentTab === 'employes'" class="space-y-6">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div
+                            class="bg-white p-4 rounded-xl shadow border-l-4 border-brand-green flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-gray-700">Nouveau Profil</h3>
+                                <p class="text-xs text-gray-500">Ajouter un employé</p>
+                            </div>
+                            <button @click="openModal()"
+                                class="bg-brand-green hover:bg-green-800 text-white px-4 py-2 rounded-lg shadow transition flex items-center gap-2 text-sm">
+                                <i class="fa-solid fa-plus"></i> Créer
+                            </button>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-xl shadow border-l-4 border-brand-yellow flex flex-col gap-3">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="font-bold text-gray-700">Import de Masse</h3>
+                                    <p class="text-xs text-gray-500">Fichiers CSV / Excel</p>
+                                </div>
+                                <button @click="importInput.click()"
+                                    class="bg-brand-yellow hover:bg-yellow-500 text-green-900 font-bold px-4 py-2 rounded-lg shadow transition flex items-center gap-2 text-sm">
+                                    <i class="fa-solid fa-file-import"></i> Importer
+                                </button>
+                            </div>
+                            <div class="text-xs bg-gray-50 p-2 rounded border border-gray-200">
+                                <label class="block text-gray-500 font-bold mb-1">Destination (Site) :</label>
+                                <select v-model="importTargetSite"
+                                    class="w-full bg-white border border-gray-300 rounded px-2 py-1 outline-none text-gray-700">
+                                    <option value="">Sélectionner le site du fichier...</option>
+                                    <option v-for="site in sites" :value="site">{{ site }}</option>
+                                </select>
+                                <p v-if="!importTargetSite" class="text-red-500 mt-1 text-[10px]">* Veuillez choisir un
+                                    site avant d'importer.</p>
+                            </div>
+                            <input type="file" ref="importInput" @change="importEmployeesFile" class="hidden"
+                                accept=".xlsx, .xls, .csv" :disabled="!importTargetSite">
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row justify-between items-end gap-3 mb-2">
+                        <div class="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm gap-1">
+                            <button @click="filters.employeeType = 'all'"
+                                :class="filters.employeeType === 'all' ? 'bg-brand-green text-white shadow' : 'text-gray-500 hover:bg-gray-100'"
+                                class="px-3 py-1.5 rounded-md text-xs font-semibold transition">Tous</button>
+                            <button @click="filters.employeeType = 'permanent'"
+                                :class="filters.employeeType === 'permanent' ? 'bg-blue-600 text-white shadow' : 'text-gray-500 hover:bg-gray-100'"
+                                class="px-3 py-1.5 rounded-md text-xs font-semibold transition">Permanents</button>
+                            <button @click="filters.employeeType = 'temporaire'"
+                                :class="filters.employeeType === 'temporaire' ? 'bg-purple-600 text-white shadow' : 'text-gray-500 hover:bg-gray-100'"
+                                class="px-3 py-1.5 rounded-md text-xs font-semibold transition">Temporaires</button>
+                        </div>
+
+                        <div class="flex justify-end gap-2">
+                            <button @click="exportEmployees('pdf')"
+                                class="text-red-600 hover:bg-red-50 px-3 py-1 rounded text-sm font-semibold transition"><i
+                                    class="fa-solid fa-file-pdf mr-1"></i> Liste PDF</button>
+                            <button @click="exportEmployees('excel')"
+                                class="text-green-600 hover:bg-green-50 px-3 py-1 rounded text-sm font-semibold transition"><i
+                                    class="fa-solid fa-file-excel mr-1"></i> Liste Excel</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        class="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider min-w-[150px]">
+                                        Identité</th>
+                                    <th
+                                        class="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider min-w-[100px]">
+                                        Affectation</th>
+                                    <th
+                                        class="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider min-w-[120px]">
+                                        Contact</th>
+                                    <th
+                                        class="px-3 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider min-w-[120px]">
+                                        Salaire Contractuel</th>
+                                    <th
+                                        class="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-24">
+                                        Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr v-for="emp in filteredEmployeesForDisplay" :key="emp.id"
+                                    class="hover:bg-green-50 transition-colors"
+                                    :class="{'opacity-75 bg-gray-50': emp.statut === 'renvoye'}">
+                                    <td class="px-3 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs mr-3 flex-shrink-0"
+                                                :class="(emp.type === 'temporaire') ? 'bg-purple-600 text-white' : (emp.statut === 'renvoye' ? 'bg-gray-400 text-white' : 'bg-brand-green text-white')">
+                                                {{ emp.nom ? emp.nom.charAt(0) : '?' }}
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-medium text-gray-900 flex items-center gap-2">
+                                                    {{ emp.nom }} {{ emp.prenom }}
+                                                    <span v-if="emp.statut === 'renvoye'"
+                                                        class="px-1.5 py-0.5 rounded bg-red-100 text-red-600 text-[9px] uppercase font-bold border border-red-200">Renvoyé</span>
+                                                </div>
+                                                <div v-if="emp.type === 'temporaire'"
+                                                    class="text-[10px] text-purple-600 font-bold uppercase tracking-wide">
+                                                    Temporaire</div>
+                                                <div v-if="emp.statut === 'renvoye' && emp.dateRenvoi"
+                                                    class="text-[10px] text-red-400">Fin: {{ new
+                                                    Date(emp.dateRenvoi).toLocaleDateString() }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-4 whitespace-nowrap">
+                                        <span
+                                            class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded bg-yellow-100 text-yellow-800 border border-yellow-200">
+                                            {{ emp.site }}
+                                        </span>
+                                        <span v-if="emp.type === 'temporaire'"
+                                            class="ml-1 px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded bg-purple-100 text-purple-800 border border-purple-200">
+                                            Interim
+                                        </span>
+                                    </td>
+                                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-700">
+                                        <input v-model="emp.contact" type="text"
+                                            class="w-full text-sm border border-gray-200 rounded px-2 py-1"
+                                            placeholder="contact" />
+                                    </td>
+                                    <td
+                                        class="px-3 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-700 font-mono">
+                                        {{ formatMoney(emp.salaireBase) }}</td>
+                                    <td class="px-3 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                        <button @click="openHistoryModal(emp)"
+                                            class="text-purple-600 hover:text-purple-900 mr-2"
+                                            title="Historique de travail">
+                                            <i class="fa-solid fa-clock-rotate-left"></i>
+                                        </button>
+                                        <button @click="openModal(emp)" class="text-blue-600 hover:text-blue-900 mr-2"
+                                            title="Modifier"><i class="fa-solid fa-pen-to-square"></i></button>
+                                        <button @click="deleteEmployee(emp.id)" class="text-red-600 hover:text-red-900"
+                                            title="Supprimer"><i class="fa-solid fa-trash-can"></i></button>
+                                    </td>
+                                </tr>
+                                <tr v-if="filteredEmployeesForDisplay.length === 0">
+                                    <td colspan="5" class="px-6 py-16 text-center">
+                                        <div class="text-gray-400 mb-2"><i class="fa-solid fa-users-slash text-4xl"></i>
+                                        </div>
+                                        <p class="text-gray-500 text-sm">Aucun employé trouvé avec ces filtres.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div v-if="currentTab === 'pointage'" class="space-y-6">
+                    <div
+                        class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex flex-wrap gap-2 text-xs font-medium">
+                            <div
+                                class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                                <i class="fa-solid fa-check"></i> Présent
+                            </div>
+                            <div
+                                class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">
+                                <i class="fa-solid fa-xmark"></i> Absent
+                            </div>
+                            <div
+                                class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200">
+                                <i class="fa-solid fa-umbrella"></i> Justifié
+                            </div>
+                            <div
+                                class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-200 text-gray-600 border border-gray-300">
+                                <i class="fa-solid fa-ban"></i> Bloqué (Départ/Arrivée)
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row flex-wrap gap-2 items-start sm:items-center">
+                            <div v-if="overrideDate"
+                                class="glass interactive bg-gradient-to-r from-purple-400/20 to-indigo-400/20 px-4 py-2 text-xs font-semibold text-purple-700 flex items-center gap-2 shadow-md border border-purple-300/40 backdrop-blur-md">
+                                <i class="fa-solid fa-calendar-check text-purple-600 text-sm"></i>
+                                <span class="font-bold">{{ new Date(overrideDate).toLocaleDateString('fr-FR', { weekday:
+                                    'short', day: '2-digit', month: 'short' }) }}</span>
+                                <button @click="overrideDate = null"
+                                    class="ml-1 text-purple-500 hover:text-purple-900 font-bold transition hover:scale-125"
+                                    title="Annuler la date personnalisée">×</button>
+                            </div>
+                            <input v-else type="date" @change="(e) => overrideDate = e.target.value"
+                                class="glass interactive text-xs px-3 py-2 bg-white/30 border border-purple-300/40 text-gray-700 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 outline-none transition shadow-md font-medium"
+                                title="Sélectionner une date personnalisée pour le pointage"
+                                placeholder="Sélectionner date">
+
+                            <button @click="exportAttendanceToday('pdf')"
+                                class="glass interactive bg-blue-50/50 border border-blue-300/40 text-blue-700 px-3 py-2 rounded-lg text-xs font-semibold transition shadow-md hover:shadow-lg"><i
+                                    class="fa-solid fa-calendar-day mr-1"></i> Jour</button>
+                            <button @click="exportAttendance('pdf')"
+                                class="glass interactive bg-red-50/50 border border-red-300/40 text-red-700 px-3 py-2 rounded-lg text-xs font-semibold transition shadow-md hover:shadow-lg"><i
+                                    class="fa-solid fa-file-pdf mr-1"></i> PDF Pointage</button>
+                            <button v-if="employeesVisibleInPointage.length > pointageLimit" @click="loadMorePointage"
+                                class="glass interactive bg-gray-100 border border-gray-200 text-gray-700 px-3 py-2 rounded-lg text-xs font-semibold transition shadow-md hover:shadow-lg">Charger
+                                plus</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg overflow-x-auto border border-gray-200 pb-2">
+                        <table class="w-full text-xs text-left text-gray-500">
+                            <thead class="text-xs text-white uppercase bg-brand-green sticky top-0 z-10">
+                                <tr>
+                                    <th scope="col"
+                                        class="px-2 py-3 min-w-[120px] sticky left-0 bg-brand-green border-r border-green-700">
+                                        Employé</th>
+
+                                    <th v-for="day in workDays" :key="day" :class="[
+                                            'px-0.5 py-1 text-center min-w-[30px] border-l border-green-700 align-top',
+                                            isToday(day) ? 'bg-[#FEFCE7] text-gray-800 today-cell' : '',
+                                            isSunday(day) ? 'bg-orange-600 text-white' : ''
+                                        ]">
+                                        <div v-if="getWeekday(day) === 'SA'" class="mb-1">
+                                            <button @click="toggleNextSunday(day)"
+                                                class="w-4 h-4 rounded-full bg-green-200 text-brand-green flex items-center justify-center mx-auto hover:bg-white transition shadow-sm border border-brand-green"
+                                                title="Afficher/Masquer le Dimanche suivant">
+                                                <i
+                                                    :class="isNextSundayVisible(day) ? 'fa-solid fa-minus text-[8px]' : 'fa-solid fa-plus text-[8px]'"></i>
+                                            </button>
+                                        </div>
+                                        <div v-else class="h-5"></div>
+                                        <div class="font-bold text-xs mt-1">
+                                            {{ day }}
+                                        </div>
+                                        <div class="text-[8px] uppercase tracking-wide hidden sm:block">
+                                            {{ getWeekday(day) }}
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="emp in limitedEmployees" :key="emp.id"
+                                    class="bg-white border-b hover:bg-gray-50">
+                                    <td
+                                        class="px-2 py-2 font-medium text-gray-900 sticky left-0 bg-white z-10 border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] text-xs">
+                                        <div
+                                            :class="{'text-purple-700': emp.type === 'temporaire', 'text-gray-400': emp.statut === 'renvoye'}">
+                                            {{ emp.nom }} {{ emp.prenom.charAt(0) }}.
+                                            <sup v-if="emp.type === 'temporaire'"
+                                                class="text-[8px] text-purple-600 border border-purple-200 rounded px-0.5 bg-purple-50">T</sup>
+                                            <span v-if="emp.statut === 'renvoye'"
+                                                class="ml-1 text-[8px] text-red-500 font-bold">RENV.</span>
+                                        </div>
+                                    </td>
+
+                                    <td v-for="day in workDays" :key="day" :class="[
+                                            'px-0 py-1 text-center border-l border-gray-100',
+                                            (isDismissed(emp, day) || isBeforeStart(emp, day)) ? 'cell-renvoye' : (isToday(day) ? 'bg-[#FEFCE7] today-cell' : getStatusClass(emp.id, day)),
+                                            isSunday(day) && !isToday(day) && !isDismissed(emp, day) && !isBeforeStart(emp, day) ? 'bg-orange-50' : ''
+                                        ]">
+                                        <button v-if="!isDismissed(emp, day) && !isBeforeStart(emp, day)"
+                                            @click="toggleStatus(emp.id, day)"
+                                            class="status-btn w-5 h-5 rounded-full text-[8px] flex items-center justify-center mx-auto focus:outline-none shadow-sm"
+                                            :class="getStatusInnerClass(emp.id, day)">
+                                            <i :class="getStatusIcon(emp.id, day)"></i>
+                                        </button>
+                                        <span v-else
+                                            class="text-[9px] text-gray-400 opacity-50 block w-full h-full cursor-not-allowed">
+                                            <i class="fa-solid fa-ban"></i>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr v-if="employeesVisibleInPointage.length === 0">
+                                    <td :colspan="workDays.length + 1" class="p-8 text-center text-gray-400 text-sm">La
+                                        liste est vide.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div v-if="currentTab === 'salaires'" class="space-y-6">
+                    <div class="flex justify-between items-center bg-brand-green text-white p-4 rounded-xl shadow-lg">
+                        <div>
+                            <h3 class="text-lg font-bold">État des Paiements</h3>
+                            <p class="text-green-200 text-xs">Mois de {{ months[filters.month] }} {{ filters.year }}</p>
+                        </div>
+                        <button @click="exportPayroll('pdf')"
+                            class="bg-brand-yellow text-green-900 hover:bg-yellow-400 px-4 py-2 rounded-lg shadow font-bold text-sm flex items-center gap-2 transition">
+                            <i class="fa-solid fa-print"></i> Imprimer
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow overflow-x-auto border border-gray-200">
+                        <table class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
+                            <thead class="bg-gray-100 text-gray-700">
+                                <tr>
+                                    <th class="px-2 py-3 text-left font-bold w-1/5 min-w-[120px]">Employé</th>
+                                    <th class="px-2 py-3 text-right font-bold min-w-[80px]">Salaire Base</th>
+                                    <th class="px-2 py-3 text-center font-bold text-red-600 min-w-[40px]">Abs. (J)</th>
+                                    <th class="px-2 py-3 text-right font-bold text-red-600 min-w-[70px]">Retenue</th>
+                                    <th class="px-2 py-3 text-right font-bold text-green-600 min-w-[70px]">Primes</th>
+                                    <th class="px-2 py-3 text-right font-bold text-orange-600 min-w-[70px]">Dettes</th>
+                                    <th class="px-2 py-3 text-right font-black bg-gray-200 w-32 min-w-[100px]">NET PAYER
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr v-for="item in payrollData" :key="item.emp.id" class="hover:bg-gray-50">
+                                    <td class="px-2 py-3 font-medium text-gray-900 text-xs sm:text-sm">
+                                        <div class="flex flex-col">
+                                            <span>{{ item.emp.nom }} {{ item.emp.prenom }}</span>
+                                            <span class="text-[8px] uppercase text-gray-400 tracking-wide">
+                                                {{ item.emp.site }}
+                                                <span v-if="item.emp.statut === 'renvoye'"
+                                                    class="text-red-500 font-bold ml-1">RENVOYÉ</span>
+                                            </span>
+                                        </div>
+                                        <span v-if="item.emp.type === 'temporaire'"
+                                            class="text-[8px] bg-purple-100 text-purple-700 px-1 rounded border border-purple-200 inline-block mt-0.5">TEMP</span>
+                                    </td>
+                                    <td class="px-2 py-3 text-right text-gray-600">{{ formatMoney(item.salaireBase) }}
+                                    </td>
+                                    <td class="px-2 py-3 text-center font-bold text-red-500 bg-red-50/30">{{
+                                        item.absentDays }}</td>
+
+                                    <td class="px-1 py-3 text-right relative bg-red-50/30">
+                                        <input type="number" v-model.number="item.extras.retenue"
+                                            class="w-full text-right bg-transparent border-b border-transparent hover:border-red-300 focus:border-red-500 focus:bg-white outline-none p-0.5 sm:p-1 text-red-600 text-xs font-medium"
+                                            placeholder="0">
+                                    </td>
+
+                                    <td class="px-1 py-3 text-right relative">
+                                        <input type="number" v-model.number="item.extras.prime"
+                                            class="w-full text-right bg-transparent border-b border-transparent hover:border-green-300 focus:border-green-500 focus:bg-green-50 outline-none p-0.5 sm:p-1 text-green-700 text-xs font-medium"
+                                            placeholder="0">
+                                    </td>
+
+                                    <td class="px-1 py-3 text-right relative">
+                                        <input type="number" v-model.number="item.extras.dette"
+                                            class="w-full text-right bg-transparent border-b border-transparent hover:border-orange-300 focus:border-orange-500 focus:bg-orange-50 outline-none p-0.5 sm:p-1 text-orange-700 text-xs font-medium"
+                                            placeholder="0">
+                                    </td>
+
+                                    <td
+                                        class="px-2 py-3 text-right font-black text-brand-green bg-gray-100 border-l border-gray-200 text-sm">
+                                        {{ formatMoney(item.net) }}
+                                    </td>
+                                </tr>
+                                <tr v-if="payrollData.length > 0"
+                                    class="bg-brand-green text-white font-bold border-t-4 border-brand-yellow">
+                                    <td class="px-2 py-3 text-sm">TOTAUX</td>
+                                    <td class="px-2 py-3 text-right text-green-100">{{ formatMoney(totals.base) }}</td>
+                                    <td class="px-2 py-3"></td>
+                                    <td class="px-2 py-3 text-right text-red-200">- {{ formatMoney(totals.retenue) }}
+                                    </td>
+                                    <td class="px-2 py-3 text-right text-green-200">+ {{ formatMoney(totals.primes) }}
+                                    </td>
+                                    <td class="px-2 py-3 text-right text-orange-200">- {{ formatMoney(totals.dettes) }}
+                                    </td>
+                                    <td class="px-2 py-3 text-right text-brand-yellow text-base">{{
+                                        formatMoney(totals.net) }}</td>
+                                </tr>
+                                <tr v-else>
+                                    <td colspan="7" class="p-8 text-center text-gray-400">Aucune donnée à calculer.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <div v-if="showModal"
+            class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+            <div
+                class="bg-white rounded-2xl shadow-2xl w-full max-w-sm md:max-w-md overflow-hidden transform transition-all scale-100">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-gray-800">{{ modalMode === 'create' ? 'Nouveau Collaborateur' :
+                        'Modifier Profil' }}</h3>
+                    <button @click="closeModal" class="text-gray-400 hover:text-red-500 transition"><i
+                            class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                <div class="p-6 space-y-4 text-sm h-[60vh] overflow-y-auto custom-scroll">
+
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                        <label class="text-xs font-bold text-blue-800 uppercase block mb-1">Type de Contrat</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" v-model="form.type" value="permanent"
+                                    class="text-brand-green focus:ring-brand-green">
+                                <span>Permanent (CDI/CDD)</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" v-model="form.type" value="temporaire"
+                                    class="text-purple-600 focus:ring-purple-600">
+                                <span>Temporaire / Journalier</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div v-if="modalMode === 'edit'" class="bg-red-50 p-3 rounded-lg border border-red-100">
+                        <label class="text-xs font-bold text-red-800 uppercase block mb-1">Statut Employé</label>
+                        <div class="space-y-2">
+                            <select v-model="form.statut"
+                                class="w-full border border-red-200 rounded px-2 py-1 text-sm bg-white">
+                                <option value="actif">Actif</option>
+                                <option value="renvoye">Renvoyé / Départ</option>
+                            </select>
+                            <div v-if="form.statut === 'renvoye'">
+                                <label class="text-[10px] text-red-600 font-bold uppercase">Date de fin / Renvoi</label>
+                                <input type="date" v-model="form.dateRenvoi"
+                                    class="w-full border border-red-200 rounded px-2 py-1 text-sm">
+                                <p class="text-[10px] text-red-500 italic mt-1">Les pointages après cette date seront
+                                    ignorés.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase">Nom de famille</label>
+                        <input v-model="form.nom" type="text"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-green focus:border-brand-green outline-none mt-1">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase">Prénom</label>
+                        <input v-model="form.prenom" type="text"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-green focus:border-brand-green outline-none mt-1">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase">Date d'embauche / Début</label>
+                        <input v-model="form.dateEmbauche" type="date"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-green focus:border-brand-green outline-none mt-1">
+                        <p class="text-[10px] text-gray-400 mt-1">L'employé apparaîtra dans le pointage à partir de
+                            cette date.</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Site / Agence</label>
+                            <input v-model="form.site" list="sitesList" type="text"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-green outline-none mt-1 bg-white"
+                                placeholder="Ex: Douala">
+                            <datalist id="sitesList">
+                                <option v-for="s in sites" :value="s"></option>
+                            </datalist>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Salaire / Journée</label>
+                            <input v-model.number="form.salaireBase" type="number"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-green outline-none mt-1">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase">Contact (téléphone ou email)</label>
+                        <input v-model="form.contact" type="text"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-green outline-none mt-1"
+                            placeholder="ex: +237 6xx xxx xxx ou email@exemple.com">
+                    </div>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 flex justify-end gap-3 border-t border-gray-100">
+                    <button @click="closeModal"
+                        class="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg transition font-medium text-sm">Annuler</button>
+                    <button @click="saveEmployee"
+                        class="px-4 py-2 bg-brand-green text-white rounded-lg hover:bg-green-800 shadow transition font-medium text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showHistoryModal"
+            class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+            <div
+                class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-100">
+                <div
+                    class="px-6 py-4 border-b border-gray-100 bg-brand-green text-white flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-bold">Historique de Travail</h3>
+                        <p class="text-xs opacity-80" v-if="currentHistoryEmp">{{ currentHistoryEmp.nom }} {{
+                            currentHistoryEmp.prenom }} (Année {{ filters.year }})</p>
+                    </div>
+                    <button @click="showHistoryModal = false" class="text-white hover:text-gray-300 transition"><i
+                            class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                <div class="p-6 h-[60vh] overflow-y-auto custom-scroll">
+                    <div
+                        class="bg-blue-50 p-4 rounded-lg mb-4 text-sm text-blue-800 border border-blue-200 flex items-center gap-3">
+                        <i class="fa-solid fa-info-circle text-xl"></i>
+                        <p>Voici le récapitulatif des présences et des salaires estimés pour l'année sélectionnée ({{
+                            filters.year }}).</p>
+                    </div>
+
+                    <table
+                        class="w-full text-sm text-left text-gray-500 border border-gray-200 rounded-lg overflow-hidden">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                            <tr>
+                                <th scope="col" class="px-4 py-3">Période</th>
+                                <th scope="col" class="px-4 py-3 text-center">Jours Trav.</th>
+                                <th scope="col" class="px-4 py-3 text-center text-red-600">Absences</th>
+                                <th scope="col" class="px-4 py-3 text-right">Net Estimé</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr v-for="h in historyItems" :key="h.monthName" class="hover:bg-gray-50">
+                                <td class="px-4 py-3 font-medium text-gray-900">{{ h.monthName }}</td>
+                                <td class="px-4 py-3 text-center">{{ h.presentDays }}</td>
+                                <td class="px-4 py-3 text-center text-red-500">{{ h.absentDays }}</td>
+                                <td class="px-4 py-3 text-right font-bold text-brand-green">{{ formatMoney(h.netPay) }}
+                                </td>
+                            </tr>
+                            <tr v-if="historyItems.length === 0">
+                                <td colspan="4" class="px-4 py-6 text-center text-gray-400">Aucune donnée trouvée pour
+                                    cette année.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 flex justify-end gap-3 border-t border-gray-100">
+                    <button @click="showHistoryModal = false"
+                        class="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg transition font-medium text-sm">Fermer</button>
+                    <button @click="exportHistoryPDF"
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow transition font-medium text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-file-pdf"></i> Télécharger PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="toast.show"
+            class="fixed bottom-6 right-6 bg-gray-800 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 z-50 animate-bounce-in border-l-4 border-brand-yellow">
+            <i class="fa-solid fa-check-circle text-brand-yellow text-xl"></i>
+            <div>
+                <h4 class="font-bold text-sm">Notification</h4>
+                <p class="text-xs text-gray-300">{{ toast.message }}</p>
+            </div>
+        </div>
+
+        <!-- Tutoriel modal (index) -->
+        <div id="tutorialModalIndex"
+            class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all">
+                <div class="px-6 py-4 border-b flex justify-between items-center"
+                    style="background:var(--brand-green); color:#fff;">
+                    <h3 class="font-bold">Tutoriel — RH (Guide Rapide)</h3>
+                    <button onclick="closeTutorialIndex()" class="text-white px-2 py-1">Fermer</button>
+                </div>
+                <div class="p-6">
+                    <h4 id="tutorialTitleIndex" class="text-lg font-bold mb-2"></h4>
+                    <div id="tutorialContentIndex" class="text-sm text-gray-700"></div>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 flex justify-between gap-3 border-t">
+                    <button id="tutorialPrevIndex" onclick="prevTutorialIndex()"
+                        class="px-4 py-2 bg-gray-100 rounded">Précédent</button>
+                    <div class="flex gap-2">
+                        <button id="tutorialNextIndex" onclick="nextTutorialIndex()" class="px-4 py-2"
+                            style="background:var(--brand-green); color:#fff; border-radius:6px;">Suivant</button>
+                        <button onclick="closeTutorialIndex()" class="px-4 py-2 bg-gray-200 rounded">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="libs/dexie.min.js"></script>
+    <script src="google-sheets-adapter.js?v=1.2"></script>
+
+    <script src="libs/chart.js"></script>
+    <script src="libs/xlsx.full.min.js"></script>
+    <script src="libs/jspdf.umd.min.js"></script>
+    <script src="libs/jspdf.plugin.autotable.min.js"></script>
+    <script src="./db-config.js"></script>
+    <script src="./storage-adapter.js"></script>
+    <script>
+        // --- DEXIE DATABASES ---
+        // - db (StockExpertDB): Stock data (stock.html only)
+        // - rhDb (RH_AppDB): RH data (index.html only) 
+        // - sharedDb (SharedSettingsDB): Shared settings (both pages)
+        // - localStorage wrapper: Uses sharedDb for parameters
+
+        // Shared keys for settings (synchronized across pages)
+        const LOGO_KEY = 'stock_expert_logo';
+        const THEME_COLOR_KEY = 'stock_expert_theme_color';
+        const COMPANY_KEY = 'stock_expert_company';
+        const GLASS_ENABLED_KEY = 'stock_expert_glass_enabled';
+        const BACKUP_SCHEDULE_KEY = 'stock_expert_backup_schedule_v1';
+        const THEME_KEY = 'stock_expert_theme';
+
+        // RH Data key (stored in rhDb, not synchronized)
+        const RH_APP_DATA_KEY = 'rh_app_data';
+
+        // Wrappers for shared parameters via localStorage (backed by sharedDb)
+        async function dbSetItem(key, value) {
+            localStorage.setItem(key, value);
+        }
+        async function dbGetItem(key) {
+            return localStorage.getItem(key);
+        }
+        function dbRemoveItem(key) {
+            return localStorage.removeItem(key);
+        }
+        function dbClear() {
+            return localStorage.clear();
+        }
+
+        // Wrappers for RH data (stored in rhDb, NOT synchronized)
+        async function rhDbSetItem(key, value) {
+            try {
+                // Use unified DB RH wrapper
+                await dbRhData.put({ key, value });
+            } catch (err) {
+                console.error('rhDb setItem error:', err);
+            }
+        }
+        async function rhDbGetItem(key) {
+            try {
+                const item = await dbRhData.get(key);
+                return item ? item.value : null;
+            } catch (err) {
+                console.error('rhDb getItem error:', err);
+                return null;
+            }
+        }
+
+        // Migration: Copier les anciennes données RH du localStorage natif vers rhDb
+        async function migrateRHDataToRhDb() {
+            try {
+                console.log('🔄 Vérification migration données RH anciennes versions...');
+
+                // Vérifier si la table RH est vide dans la base unifiée
+                const existingCount = await db.rhAppData.count();
+                if (existingCount > 0) {
+                    console.log('✓ RH_AppDB contient déjà des données, pas de migration');
+                    return;
+                }
+
+                // Chercher les anciennes données RH dans le vrai localStorage
+                const nativeRHData = nativeLocalStorage.getItem(RH_APP_DATA_KEY);
+                if (!nativeRHData) {
+                    console.log('ℹ️ Aucune donnée RH ancienne trouvée');
+                    return;
+                }
+
+                // Migrer vers rhDb
+                await rhDbSetItem(RH_APP_DATA_KEY, nativeRHData);
+                console.log('✅ Données RH migrées avec succès!');
+
+            } catch (err) {
+                console.error('❌ Erreur migration RH:', err);
+            }
+        }
+
+        function applyThemeColor() {
+            const color = localStorage.getItem(THEME_COLOR_KEY) || '#14522D';
+            document.documentElement.style.setProperty('--brand-green', color);
+            document.documentElement.style.setProperty('--brand-dark', color);
+            // Mise à jour des éléments dynamiques
+            document.querySelectorAll('.bg-brand, .bg-brand-green').forEach(el => el.style.backgroundColor = color);
+            document.querySelectorAll('.text-brand, .text-brand-green').forEach(el => el.style.color = color);
+            document.querySelectorAll('.border-brand-green').forEach(el => el.style.borderColor = color);
+            document.querySelectorAll('.tablehead th').forEach(el => el.style.backgroundColor = color);
+        }
+
+        function applyGlassPreference() {
+            const glassEnabled = localStorage.getItem(GLASS_ENABLED_KEY);
+            const opacity = localStorage.getItem('stock_expert_glass_opacity');
+
+            const enabled = (glassEnabled || 'true') === 'true';
+            const opacityValue = parseInt(opacity || '100');
+            const opacityLight = 0.62 * (opacityValue / 100);
+            const opacityDark = 0.04 * (opacityValue / 100);
+            document.documentElement.style.setProperty('--glass-opacity-light', opacityLight);
+            document.documentElement.style.setProperty('--glass-opacity-dark', opacityDark);
+            if (!enabled) {
+                document.documentElement.classList.add('no-glass');
+            } else {
+                document.documentElement.classList.remove('no-glass');
+            }
+            const glassSwitch = document.getElementById('glassToggleIndex');
+            if (glassSwitch) glassSwitch.checked = enabled;
+        }
+
+        applyThemeColor();
+        applyGlassPreference();
+
+        window.addEventListener('storage', function (e) {
+            if (e.key === THEME_COLOR_KEY) {
+                applyThemeColor();
+            }
+            if (e.key === GLASS_ENABLED_KEY) {
+                applyGlassPreference();
+            }
+        });
+
+        // ---------- Tutoriel (index) ----------
+        const tutorialStepsIndex = [{
+            title: 'Bienvenue',
+            content: 'Bienvenue dans l\'application RH. Ce tutoriel rapide vous montrera les fonctions principales.'
+        }, {
+            title: 'Navigation',
+            content: 'Utilisez le menu latéral pour passer entre Tableau de Bord, Employés, Présences et Paie.'
+        }, {
+            title: 'Gérer les employés',
+            content: 'Dans l\'onglet "Effectifs", cliquez sur + pour ajouter un employé, ou cliquez sur un profil pour modifier/supprimer.'
+        }, {
+            title: 'Pointage',
+            content: 'Dans "Présences", visualisez et modifiez les statuts journaliers avec le bouton rond pour chaque jour.'
+        }, {
+            title: 'Sauvegarde',
+            content: 'La sauvegarde automatique est configurée dans les paramètres — vous pouvez exporter et restaurer l\'état.'
+        }, {
+            title: 'Fin',
+            content: 'C\'est tout pour ce guide rapide. Retournez au tableau ou explorez les fonctionnalités avancées.'
+        }];
+
+        let _tutorialIndex = 0;
+
+        function renderTutorialIndex() {
+            const t = tutorialStepsIndex[_tutorialIndex];
+            document.getElementById('tutorialTitleIndex').innerText = (t ? t.title : '');
+            document.getElementById('tutorialContentIndex').innerText = (t ? t.content : '');
+            document.getElementById('tutorialPrevIndex').style.display = _tutorialIndex === 0 ? 'none' : 'inline-block';
+            document.getElementById('tutorialNextIndex').innerText = _tutorialIndex === tutorialStepsIndex.length - 1 ? 'Terminer' : 'Suivant';
+        }
+
+        function startTutorialIndex() {
+            _tutorialIndex = 0;
+            renderTutorialIndex();
+            document.getElementById('tutorialModalIndex').classList.remove('hidden');
+        }
+
+        function closeTutorialIndex() {
+            document.getElementById('tutorialModalIndex').classList.add('hidden');
+        }
+
+        function nextTutorialIndex() {
+            if (_tutorialIndex < tutorialStepsIndex.length - 1) {
+                _tutorialIndex++;
+                renderTutorialIndex();
+            } else {
+                closeTutorialIndex();
+            }
+        }
+
+        function prevTutorialIndex() {
+            if (_tutorialIndex > 0) {
+                _tutorialIndex--;
+                renderTutorialIndex();
+            }
+        }
+
+        const {
+            createApp,
+            ref,
+            computed,
+            onMounted,
+            watch,
+            nextTick
+        } = Vue;
+
+        createApp({
+            setup() {
+                // Configuration
+                const sites = ref(['Douala', 'Kribi', 'Sikoum', 'Yaoundé', 'Bafoussam']);
+                const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
+                // État
+                const currentTab = ref('dashboard');
+                const employees = ref([]); // Vide par défaut
+                const attendance = ref({});
+                const payrollExtras = ref({});
+                const logoSrc = ref(null); // Logo de l'entreprise
+                // Read company settings from localStorage; the value may be a JSON string
+                const parseCompanyName = (raw) => {
+                    if (!raw) return '';
+                    try {
+                        const j = JSON.parse(raw);
+                        if (j && typeof j === 'object' && j.name) return j.name;
+                    } catch (e) {
+                        // not JSON, fall through
+                    }
+                    return String(raw || '');
+                };
+                const companyName = ref('');
+                // Load company name from Dexie
+                dbGetItem('stock_expert_company').then(raw => {
+                    companyName.value = parseCompanyName(raw) || '';
+                }).catch(err => console.error('Dexie error:', err));
+                const stockItems = ref([]); // Produits stock
+                const visibleSundays = ref([]);
+
+                // État pour import
+                const importTargetSite = ref('');
+
+                // Refs pour les inputs fichiers (Crucial pour le fonctionnement)
+                const importInput = ref(null);
+                const backupInput = ref(null);
+
+                // Chargement persistant (conteneur pour les données restaurées)
+                let savedData = null;
+
+                const filters = ref({
+                    site: '',
+                    employeeType: 'all', // 'all', 'permanent', 'temporaire'
+                    month: new Date().getMonth(),
+                    year: new Date().getFullYear()
+                });
+
+                // Override date for pointage (for testing/reporting)
+                // Format: 'YYYY-MM-DD' or null to use current date
+                const overrideDate = ref(null);
+
+                // Modal & Toast
+                const modalMode = ref('create');
+                const showModal = ref(false);
+                const form = ref({
+                    id: null,
+                    type: 'permanent', // Default value
+                    nom: '',
+                    prenom: '',
+                    site: '',
+                    salaireBase: 0,
+                    contact: '',
+                    statut: 'actif', // Nouveau champ
+                    dateRenvoi: null, // Nouveau champ
+                    dateEmbauche: null // NOUVEAU CHAMP DATE D'EMBAUCHE
+                });
+                const toast = ref({
+                    show: false,
+                    message: ''
+                });
+
+                // --- NOUVEAU: ETAT HISTORIQUE ---
+                const showHistoryModal = ref(false);
+                const currentHistoryEmp = ref(null);
+                const historyItems = ref([]);
+
+                // --- CHART.JS REFS ---
+                const pieChartEl = ref(null);
+                const barChartEl = ref(null);
+                const tempChartEl = ref(null); // NOUVEAU
+                let pieChartInstance = null;
+                let barChartInstance = null;
+                let tempChartInstance = null; // NOUVEAU
+
+                // --- HELPERS ---
+                const showToast = (msg) => {
+                    toast.value = {
+                        show: true,
+                        message: msg
+                    };
+                    setTimeout(() => toast.value.show = false, 3000);
+                };
+
+                const formatMoney = (amount) => {
+                    let val = new Intl.NumberFormat('fr-CM').format(Math.round(amount));
+                    return val.replace(/[\u00A0\u202F]/g, ' ') + ' FCFA';
+                };
+
+                // --- GESTION DU LOGO ---
+                // (Constants already defined at top: LOGO_KEY, THEME_KEY, COMPANY_KEY, etc.)
+                // Backup scheduler keys (shared with stock.html) - already defined
+                const LAST_BACKUP_KEY = 'stock_expert_last_backup_v1';
+                const BACKUP_LOCK_KEY = 'stock_expert_backup_lock_v1';
+
+                const initTheme = () => {
+                    const themeVal = localStorage.getItem(THEME_KEY);
+                    if (themeVal === 'dark') document.documentElement.classList.add('dark');
+                };
+
+                const toggleTheme = (event) => {
+                    if (!document.startViewTransition || !event) {
+                        document.documentElement.classList.toggle('dark');
+                        const isDark = document.documentElement.classList.contains('dark');
+                        localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+                        showToast(isDark ? 'Mode sombre activé' : 'Mode clair activé');
+                        return;
+                    }
+                    const x = event.clientX;
+                    const y = event.clientY;
+                    const endRadius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+                    const transition = document.startViewTransition(() => {
+                        document.documentElement.classList.toggle('dark');
+                        const isDark = document.documentElement.classList.contains('dark');
+                        dbSetItem(THEME_KEY, isDark ? 'dark' : 'light').catch(err => console.error('Dexie error:', err));
+                    });
+                    transition.ready.then(() => {
+                        const clipPath = [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`];
+                        document.documentElement.animate({
+                            clipPath: clipPath
+                        }, {
+                            duration: 500,
+                            easing: 'ease-in',
+                            pseudoElement: '::view-transition-new(root)',
+                        });
+                    });
+                };
+
+                // --- COMPUTED ---
+                const filteredEmployees = computed(() => {
+                    return employees.value.filter(e => {
+                        // 1. Filtrer par site
+                        const matchSite = !filters.value.site || e.site === filters.value.site;
+
+                        // 2. Filtrer par type (permanent vs temporaire)
+                        const empType = e.type || 'permanent';
+                        const matchType = filters.value.employeeType === 'all' || empType === filters.value.employeeType;
+
+                        return matchSite && matchType;
+                    });
+                });
+
+                // NOUVEAU : Calculer les employés visibles pour le POINTAGE spécifiquement
+                // Exclut les renvoyés si le mois actuel > mois de renvoi
+                // Exclut les nouveaux si le mois actuel < mois d'embauche
+                const employeesVisibleInPointage = computed(() => {
+                    const currentMonthStart = new Date(filters.value.year, filters.value.month, 1);
+                    const currentMonthEnd = new Date(filters.value.year, filters.value.month + 1, 0); // Dernier jour du mois
+
+                    return filteredEmployees.value.filter(e => {
+                        // Logique renvoi : Si renvoyé avant le début de ce mois -> Masqué
+                        if (e.statut === 'renvoye' && e.dateRenvoi) {
+                            const dismissalDate = new Date(e.dateRenvoi);
+                            if (dismissalDate < currentMonthStart) {
+                                return false;
+                            }
+                        }
+
+                        // Logique Embauche : Si embauché APRES la fin de ce mois -> Masqué
+                        if (e.dateEmbauche) {
+                            const startDate = new Date(e.dateEmbauche);
+                            // On compare la date d'embauche avec la fin du mois.
+                            // Si date embauche > fin du mois, il n'a pas encore commencé.
+                            if (startDate > currentMonthEnd) {
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    });
+                });
+
+                // NOUVEAU : Employés filtrés pour l'affichage (Salaires + Employés)
+                // Exclut les renvoyés à partir du mois SUIVANT leur renvoi
+                const filteredEmployeesForDisplay = computed(() => {
+                    const currentMonthStart = new Date(filters.value.year, filters.value.month, 1);
+
+                    return filteredEmployees.value.filter(e => {
+                        // Si renvoyé et sa date de renvoi est avant le début du mois courant
+                        // -> Exclure (ne pas afficher à partir du mois suivant)
+                        if (e.statut === 'renvoye' && e.dateRenvoi) {
+                            const dismissalDate = new Date(e.dateRenvoi);
+                            // Réinitialiser l'heure pour comparaison correcte de date
+                            dismissalDate.setHours(0, 0, 0, 0);
+                            const monthStartCopy = new Date(currentMonthStart);
+                            monthStartCopy.setHours(0, 0, 0, 0);
+
+                            // Si renvoi avant le début du mois courant, exclure
+                            if (dismissalDate < monthStartCopy) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    });
+                });
+
+                // Limiteur d'affichage pour améliorer les performances du tableau de pointage
+                const pointageLimit = ref(50);
+                const limitedEmployees = computed(() => employeesVisibleInPointage.value.slice(0, pointageLimit.value));
+                const loadMorePointage = () => {
+                    // Augmente la limite progressivement
+                    pointageLimit.value = Math.min(employeesVisibleInPointage.value.length, pointageLimit.value + 200);
+                };
+
+
+                const daysInMonth = computed(() => new Date(filters.value.year, filters.value.month + 1, 0).getDate());
+
+                // Liste des jours incluant Lun-Sam + les dimanches activés individuellement
+                const workDays = computed(() => {
+                    const days = [];
+                    for (let d = 1; d <= daysInMonth.value; d++) {
+                        const date = new Date(filters.value.year, filters.value.month, d);
+                        const isSun = date.getDay() === 0;
+
+                        // Si ce n'est pas un dimanche, ou si c'est un dimanche présent dans la liste visible
+                        if (!isSun || visibleSundays.value.includes(d)) {
+                            days.push(d);
+                        }
+                    }
+                    return days;
+                });
+
+                // Helpers pour le bouton "+"
+                const isNextSundayVisible = (saturdayDay) => {
+                    const sunday = saturdayDay + 1;
+                    return visibleSundays.value.includes(sunday);
+                };
+
+                const toggleNextSunday = (saturdayDay) => {
+                    const sunday = saturdayDay + 1;
+                    if (sunday > daysInMonth.value) return; // Fin de mois
+
+                    if (visibleSundays.value.includes(sunday)) {
+                        visibleSundays.value = visibleSundays.value.filter(d => d !== sunday);
+                    } else {
+                        visibleSundays.value.push(sunday);
+
+                        // Initialisation pour ce dimanche
+                        const year = filters.value.year;
+                        const month = filters.value.month;
+
+                        employees.value.forEach(emp => {
+                            const key = `${emp.id}_${year}-${month}-${sunday}`;
+                            // Si aucune donnée n'existe, on met Absent Justifié (3) par défaut pour les dimanches
+                            if (attendance.value[key] === undefined) {
+                                attendance.value[key] = 3; // MODIFICATION: 3 (Justifié) au lieu de 2 (Absent)
+                            }
+                        });
+                    }
+                };
+
+                // Helper pour vérifier si la date est après le renvoi
+                const isDismissed = (emp, day) => {
+                    if (emp.statut !== 'renvoye' || !emp.dateRenvoi) return false;
+
+                    const currentDate = new Date(filters.value.year, filters.value.month, day);
+                    const dismissalDate = new Date(emp.dateRenvoi);
+
+                    // On compare les dates. Si la date courante est strictement supérieure à la date de renvoi
+                    // On remet l'heure à 0 pour une comparaison juste de date
+                    currentDate.setHours(0, 0, 0, 0);
+                    dismissalDate.setHours(0, 0, 0, 0);
+
+                    return currentDate > dismissalDate;
+                };
+
+                // NOUVEAU HELPER : Vérifier si la date est AVANT l'embauche
+                const isBeforeStart = (emp, day) => {
+                    if (!emp.dateEmbauche) return false; // Si pas de date, on suppose qu'il est là depuis toujours
+
+                    const currentDate = new Date(filters.value.year, filters.value.month, day);
+                    const startDate = new Date(emp.dateEmbauche);
+
+                    currentDate.setHours(0, 0, 0, 0);
+                    startDate.setHours(0, 0, 0, 0);
+
+                    // Si la date actuelle est strictement avant la date de début
+                    return currentDate < startDate;
+                };
+
+
+                // --- LOGIQUE DE STATUT PAR DEFAUT CENTRALISEE ---
+                const resolveStatus = (empId, day) => {
+                    const key = `${empId}_${filters.value.year}-${filters.value.month}-${day}`;
+                    const val = attendance.value[key];
+                    if (val !== undefined) return val;
+
+                    // Si pas de valeur, on check le type employé
+                    const emp = employees.value.find(e => e.id === empId);
+                    if (emp && emp.type === 'temporaire') {
+                        return 3; // Par défaut Justifié (Jaune) pour les temporaires
+                    }
+                    return 1; // Par défaut Présent (Vert) pour les autres
+                };
+
+                // Calculs de paie
+                const payrollData = computed(() => {
+                    const y = filters.value.year;
+                    const m = filters.value.month;
+                    const keyMonth = `${y}-${m}`;
+
+                    return filteredEmployeesForDisplay.value.map(emp => {
+                        const extrasKey = `${emp.id}_${keyMonth}`;
+                        if (!payrollExtras.value[extrasKey]) {
+                            payrollExtras.value[extrasKey] = {
+                                prime: 0,
+                                dette: 0,
+                                retenue: 0
+                            };
+                        }
+                        const extras = payrollExtras.value[extrasKey];
+
+                        let absentCount = 0;
+                        for (let d = 1; d <= daysInMonth.value; d++) {
+                            const dateObj = new Date(y, m, d);
+                            const isSunday = dateObj.getDay() === 0;
+
+                            // LOGIQUE RENVOI : Si on est après la date de renvoi, on arrête de compter
+                            if (emp.statut === 'renvoye' && emp.dateRenvoi) {
+                                const dismissalDate = new Date(emp.dateRenvoi);
+                                dismissalDate.setHours(0, 0, 0, 0);
+                                dateObj.setHours(0, 0, 0, 0);
+                                if (dateObj > dismissalDate) continue; // On ignore ce jour
+                            }
+
+                            // LOGIQUE EMBAUCHE : Si on est avant la date d'embauche, on ignore ce jour (ne compte pas comme absence)
+                            if (emp.dateEmbauche) {
+                                const startDate = new Date(emp.dateEmbauche);
+                                startDate.setHours(0, 0, 0, 0);
+                                dateObj.setHours(0, 0, 0, 0);
+                                if (dateObj < startDate) continue;
+                            }
+
+                            // Utilisation de la logique par défaut
+                            const key = `${emp.id}_${y}-${m}-${d}`;
+                            let status = attendance.value[key];
+                            if (status === undefined) {
+                                status = (emp.type === 'temporaire') ? 3 : 1;
+                            }
+
+                            if (status === 2) {
+                                // Les absences du dimanche ne comptent PAS, qu'il soit affiché ou non
+                                if (!isSunday) {
+                                    absentCount++;
+                                }
+                            }
+                        }
+
+                        // Ajustement jours ouvrables pour les temporaires si besoin (ici on garde 22 standard)
+                        const joursOuvrables = 22;
+                        const retenueAbsence = Math.round((emp.salaireBase / joursOuvrables) * absentCount);
+                        const net = Math.round(emp.salaireBase + (extras.prime || 0) - (extras.dette || 0) - (extras.retenue || 0) - retenueAbsence);
+
+                        return {
+                            emp,
+                            salaireBase: emp.salaireBase,
+                            absentDays: absentCount,
+                            retenueAbsence: retenueAbsence,
+                            extras,
+                            net
+                        };
+                    });
+                });
+
+                const totals = computed(() => {
+                    return payrollData.value.reduce((acc, curr) => ({
+                        base: acc.base + curr.salaireBase,
+                        retenue: acc.retenue + (curr.extras.retenue || 0) + curr.retenueAbsence,
+                        primes: acc.primes + (curr.extras.prime || 0),
+                        dettes: acc.dettes + (curr.extras.dette || 0),
+                        net: acc.net + curr.net
+                    }), {
+                        base: 0,
+                        retenue: 0,
+                        primes: 0,
+                        dettes: 0,
+                        net: 0
+                    });
+                });
+
+                // --- KPI DATA COMPUTED ---
+                const kpiData = computed(() => {
+                    const totalEmployees = filteredEmployees.value.length;
+                    // On compte les actifs (pas renvoyés)
+                    const activeEmployees = filteredEmployees.value.filter(e => e.statut !== 'renvoye').length;
+                    const totalPayroll = totals.value.net;
+
+                    // Taux de présence AUJOURD'HUI (ou date override)
+                    const current = getCurrentDate();
+                    const day = current.getDate();
+                    const month = current.getMonth();
+                    const year = current.getFullYear();
+
+                    let presentCount = 0;
+                    if (activeEmployees > 0) {
+                        filteredEmployees.value.forEach(emp => {
+                            if (emp.statut === 'renvoye') return; // On ignore les renvoyés pour la présence du jour
+                            // Ignore si pas encore embauché ce jour là
+                            if (emp.dateEmbauche) {
+                                const start = new Date(emp.dateEmbauche);
+                                start.setHours(0, 0, 0, 0);
+                                const currCheck = new Date(current);
+                                currCheck.setHours(0, 0, 0, 0);
+                                if (currCheck < start) return;
+                            }
+
+                            const key = `${emp.id}_${year}-${month}-${day}`;
+                            let status = attendance.value[key];
+                            // Default logic applied here too
+                            if (status === undefined) {
+                                status = (emp.type === 'temporaire') ? 3 : 1;
+                            }
+
+                            if (!status || status === 1 || status === 3) {
+                                presentCount++;
+                            }
+                        });
+                    }
+
+                    const attendanceRate = activeEmployees > 0 ? Math.round((presentCount / activeEmployees) * 100) : 0;
+
+                    return {
+                        totalEmployees,
+                        activeEmployees,
+                        totalPayroll,
+                        presentCount,
+                        attendanceRate
+                    };
+                });
+
+                // --- CHARTS LOGIC ---
+                const updateCharts = () => {
+                    if (currentTab.value !== 'dashboard') return;
+
+                    const dataset = filteredEmployees.value;
+                    const siteStats = {};
+
+                    // Stats pour le camembert Sites et Barres Salaires
+                    dataset.forEach(emp => {
+                        if (!siteStats[emp.site]) {
+                            siteStats[emp.site] = {
+                                count: 0,
+                                salaryCost: 0
+                            };
+                        }
+                        if (emp.statut !== 'renvoye') {
+                            siteStats[emp.site].count++;
+                        }
+                        const payrollEntry = payrollData.value.find(p => p.emp.id === emp.id);
+                        if (payrollEntry) {
+                            siteStats[emp.site].salaryCost += payrollEntry.net;
+                        }
+                    });
+
+                    // NOUVEAU : Calcul pour le graphique TEMPORAIRES (Taux d'activité)
+                    const year = filters.value.year;
+                    const month = filters.value.month;
+                    const daysInM = new Date(year, month + 1, 0).getDate();
+
+                    let tempTotal = 0;
+                    let tempActive = 0;
+
+                    dataset.forEach(emp => {
+                        // On ne prend que les temporaires qui sont 'actifs' ou renvoyés PENDANT ce mois (donc pas renvoyés avant)
+                        const currentMonthStart = new Date(year, month, 1);
+                        if (emp.type === 'temporaire') {
+                            let isValid = true;
+                            if (emp.statut === 'renvoye' && emp.dateRenvoi) {
+                                if (new Date(emp.dateRenvoi) < currentMonthStart) isValid = false;
+                            }
+
+                            if (isValid) {
+                                tempTotal++;
+                                // Vérifier s'il a au moins un pointage présent (1) ou justifié (3)
+                                let hasWorked = false;
+                                for (let d = 1; d <= daysInM; d++) {
+                                    const key = `${emp.id}_${year}-${month}-${d}`;
+                                    let s = attendance.value[key];
+                                    if (s === undefined) s = 3; // Default temp logic
+
+                                    if (s === 1 || s === 3) { // Présent ou Justifié
+                                        // Pour le graph d'activité, on considère qu'un "Justifié par défaut" n'est PAS actif s'il n'a jamais été marqué présent (1).
+                                        // MAIS si on suit la logique stricte "Activité", Justifié = a un contrat mais pas là. 
+                                        // Pour simplifier : si statut est 1 (Présent) au moins une fois
+                                        if (s === 1) {
+                                            hasWorked = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (hasWorked) tempActive++;
+                            }
+                        }
+                    });
+
+                    const tempInactive = tempTotal - tempActive;
+
+                    const labels = Object.keys(siteStats);
+                    const countData = labels.map(l => siteStats[l].count);
+                    const costData = labels.map(l => siteStats[l].salaryCost);
+
+                    const bgColors = [
+                        '#14522D', '#f59e0b', '#10b981', '#3b82f6', '#6366f1', '#8b5cf6'
+                    ];
+
+                    nextTick(() => {
+                        if (pieChartEl.value) {
+                            if (pieChartInstance) pieChartInstance.destroy();
+                            pieChartInstance = new Chart(pieChartEl.value, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: labels,
+                                    datasets: [{
+                                        data: countData,
+                                        backgroundColor: bgColors,
+                                        borderWidth: 0
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: {
+                                            position: 'right'
+                                        }
+                                    }
+                                }
+                            });
+                        }
+
+                        if (barChartEl.value) {
+                            if (barChartInstance) barChartInstance.destroy();
+                            barChartInstance = new Chart(barChartEl.value, {
+                                type: 'bar',
+                                data: {
+                                    labels: labels,
+                                    datasets: [{
+                                        label: 'Masse Salariale (FCFA)',
+                                        data: costData,
+                                        backgroundColor: '#14522D',
+                                        borderRadius: 4
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true
+                                        }
+                                    }
+                                }
+                            });
+                        }
+
+                        // NOUVEAU CHART
+                        if (tempChartEl.value) {
+                            if (tempChartInstance) tempChartInstance.destroy();
+                            // S'il n'y a aucun temporaire, on affiche un graph vide pour éviter les erreurs ou un message
+                            const dataTemp = tempTotal > 0 ? [tempActive, tempInactive] : [0, 0];
+
+                            tempChartInstance = new Chart(tempChartEl.value, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: ['Actifs (Présents)', 'Inactifs / En attente'],
+                                    datasets: [{
+                                        data: dataTemp,
+                                        backgroundColor: ['#9333ea', '#e5e7eb'], // Purple for Active, Gray for Inactive
+                                        borderWidth: 0
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: {
+                                            position: 'bottom'
+                                        },
+                                        title: {
+                                            display: true,
+                                            text: tempTotal > 0 ? `${Math.round((tempActive / tempTotal) * 100)}% Actifs` : 'Aucun Temporaire'
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    });
+                };
+
+                watch([filteredEmployees, payrollData, currentTab, filters], () => {
+                    if (currentTab.value === 'dashboard') {
+                        setTimeout(updateCharts, 100);
+                    }
+                }, {
+                    deep: true
+                });
+
+
+                // --- IMPORT EXCEL/CSV ROBUSTE ---
+                const importEmployeesFile = (event) => {
+                    if (!importTargetSite.value) {
+                        alert("Veuillez d'abord sélectionner le site cible pour ces employés.");
+                        event.target.value = '';
+                        return;
+                    }
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = new Uint8Array(e.target.result);
+                            const workbook = XLSX.read(data, {
+                                type: 'array'
+                            });
+                            const sheetName = workbook.SheetNames[0];
+                            const worksheet = workbook.Sheets[sheetName];
+                            const rows = XLSX.utils.sheet_to_json(worksheet, {
+                                header: 1
+                            });
+
+                            if (rows.length > 0) {
+                                let headerIndex = -1;
+                                for (let i = 0; i < Math.min(15, rows.length); i++) {
+                                    const rowStr = rows[i].join(' ').toLowerCase();
+                                    if (rowStr.includes('nom') || rowStr.includes('noms')) {
+                                        headerIndex = i;
+                                        break;
+                                    }
+                                }
+                                if (headerIndex === -1) throw new Error("Impossible de trouver la ligne des titres (Nom, Prénom...)");
+
+                                const headers = rows[headerIndex].map(h => String(h).trim().toLowerCase());
+                                const colNomIndex = headers.findIndex(h => h.includes('nom'));
+                                const colSalaireIndex = headers.findIndex(h => h.includes('salaire'));
+                                const colContactIndex = headers.findIndex(h => (
+                                    h.includes('contact') || h.includes('tel') || h.includes('telephone') || h.includes('phone') || h.includes('email') || h.includes('mail')
+                                ));
+
+                                const maxId = employees.value.length > 0 ? Math.max(0, ...employees.value.map(e => Number(e.id) || 0)) : 0;
+                                let newId = maxId + 1;
+                                let addedCount = 0;
+                                let skippedDuplicates = 0;
+
+                                for (let i = headerIndex + 1; i < rows.length; i++) {
+                                    const row = rows[i];
+                                    if (!row || row.length === 0) continue;
+                                    let rawName = colNomIndex > -1 ? row[colNomIndex] : null;
+                                    if (!rawName || typeof rawName !== 'string' || rawName.trim() === '') continue;
+                                    if (rawName.toLowerCase().includes('total')) continue;
+
+                                    rawName = rawName.trim();
+                                    let nom = rawName;
+                                    let prenom = '';
+
+                                    const spaceIdx = rawName.indexOf(' ');
+                                    if (spaceIdx > 0) {
+                                        nom = rawName.substring(0, spaceIdx).toUpperCase();
+                                        prenom = rawName.substring(spaceIdx + 1).trim();
+                                        prenom = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
+                                    }
+
+                                    const isDuplicate = employees.value.some(e => e.nom.toUpperCase() === nom.toUpperCase() && e.prenom.toUpperCase() === prenom.toUpperCase());
+
+                                    if (isDuplicate) {
+                                        skippedDuplicates++;
+                                        continue;
+                                    }
+
+                                    let salaire = 0;
+                                    let contactVal = '';
+                                    if (colSalaireIndex > -1 && row[colSalaireIndex]) {
+                                        let s = row[colSalaireIndex];
+                                        if (typeof s === 'string') s = s.replace(/[^0-9]/g, '');
+                                        salaire = Number(s) || 0;
+                                    }
+                                    if (colContactIndex > -1 && row[colContactIndex]) {
+                                        contactVal = String(row[colContactIndex]).trim();
+                                    }
+
+                                    employees.value.push({
+                                        id: newId++,
+                                        nom: nom,
+                                        prenom: prenom,
+                                        site: importTargetSite.value,
+                                        type: 'permanent', // Par défaut lors de l'import
+                                        salaireBase: salaire,
+                                        contact: contactVal,
+                                        statut: 'actif',
+                                        dateRenvoi: null,
+                                        dateEmbauche: null
+                                    });
+                                    addedCount++;
+                                }
+                                if (addedCount > 0) showToast(`${addedCount} importés. ${skippedDuplicates} ignorés.`);
+                                else alert("Aucun nouvel employé importé.");
+                            }
+                        } catch (err) {
+                            alert("Erreur import : " + err.message);
+                        }
+                        event.target.value = '';
+                    };
+                    reader.readAsArrayBuffer(file);
+                };
+
+                // --- PERSISTANCE ---
+                onMounted(() => {
+                    initTheme();
+                    rhDbGetItem(RH_APP_DATA_KEY).then(rawData => {
+                        if (rawData) {
+                            try {
+                                savedData = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+                                if (savedData.employees && Array.isArray(savedData.employees)) {
+                                    employees.value = savedData.employees;
+                                }
+                                if (savedData.attendance && typeof savedData.attendance === 'object') {
+                                    attendance.value = savedData.attendance;
+                                }
+                                if (savedData.payrollExtras && typeof savedData.payrollExtras === 'object') {
+                                    payrollExtras.value = savedData.payrollExtras;
+                                }
+                                if (savedData.visibleSundays && Array.isArray(savedData.visibleSundays)) {
+                                    visibleSundays.value = savedData.visibleSundays;
+                                }
+                                console.log('[index] Données restaurées depuis Dexie:', savedData);
+                            } catch (e) {
+                                console.error('[index] Erreur décodage rh_app_data:', e);
+                            }
+                        }
+                    }).catch(err => console.error('Dexie error on load:', err));
+                    dbGetItem(LOGO_KEY).then(savedLogo => { if (savedLogo) logoSrc.value = savedLogo; }).catch(err => console.error('Dexie error:', err));
+
+                    // Load theme color from Dexie
+                    dbGetItem(THEME_COLOR_KEY).then(savedColor => {
+                        if (savedColor) {
+                            document.documentElement.style.setProperty('--brand-green', savedColor);
+                            document.documentElement.style.setProperty('--brand-dark', savedColor);
+                        }
+                    }).catch(err => console.error('Dexie error:', err));
+
+                    // Keep companyName in sync with settings from stock.html
+                    dbGetItem(COMPANY_KEY).then(savedCompany => { if (savedCompany) companyName.value = parseCompanyName(savedCompany); }).catch(err => console.error('Dexie error:', err));
+
+                    window.addEventListener('storage', (e) => {
+                        if (e.key === COMPANY_KEY) companyName.value = parseCompanyName(e.newValue || '');
+                        if (e.key === LOGO_KEY) logoSrc.value = e.newValue || null;
+                        if (e.key === THEME_COLOR_KEY && e.newValue) {
+                            // Apply theme color change immediately
+                            document.documentElement.style.setProperty('--brand-green', e.newValue);
+                            document.documentElement.style.setProperty('--brand-dark', e.newValue);
+                        }
+                        if (e.key === BACKUP_SCHEDULE_KEY) {
+                            // Reload backup schedule when it changes
+                            console.log('[index] Backup schedule updated from storage event:', e.newValue);
+                        }
+                    });
+
+                    // Real-time sync across tabs/windows using BroadcastChannel (fallback: storage event)
+                    try {
+                        if ('BroadcastChannel' in window) {
+                            const bc = new BroadcastChannel('stock_expert_sync');
+                            bc.addEventListener('message', (ev) => {
+                                const msg = ev.data || {};
+                                try {
+                                    console.log('[index] BroadcastChannel message received (onMounted):', msg);
+                                    if (msg.type === 'company') {
+                                        companyName.value = parseCompanyName(msg.data || '');
+                                    } else if (msg.type === 'request-company') {
+                                        // Respond with current raw value from Dexie (may be JSON)
+                                        dbGetItem(COMPANY_KEY).then(raw => {
+                                            raw = raw || '';
+                                            bc.postMessage({ type: 'company', data: raw });
+                                        }).catch(err => console.error('Dexie error:', err));
+                                    } else if (msg.type === 'backup-reminder') {
+                                        // Show backup reminder banner when stock.html triggers it
+                                        console.log('[index] received backup-reminder, showing banner:', msg.message);
+                                        showBackupBanner(msg.message || 'Rappel: pensez à sauvegarder.', () => {
+                                            try {
+                                                console.log('[index] backup banner save button clicked');
+                                                const bcReq = new BroadcastChannel('stock_expert_sync');
+                                                bcReq.postMessage({
+                                                    type: 'backup-request'
+                                                });
+                                                try {
+                                                    bcReq.close();
+                                                } catch (e) { }
+                                            } catch (e) {
+                                                console.warn('[index] error sending backup-request:', e);
+                                            }
+                                            removeBackupBanner();
+                                        });
+                                    } else if (msg.type === 'backup-done') {
+                                        // Show completion notification
+                                        console.log('[index] received backup-done notification');
+                                        showBackupDoneBanner(msg.when || new Date().toISOString());
+                                    }
+                                } catch (e) {
+                                    console.warn('[index] error processing BroadcastChannel message:', e);
+                                }
+                            });
+
+                            // Ask other tabs for the current company (in case this tab loaded after they set it)
+                            bc.postMessage({
+                                type: 'request-company'
+                            });
+
+                            // Start the index-side scheduler so this tab can show missed reminders
+                            try {
+                                initBackupScheduler();
+                            } catch (e) {
+                                console.warn('[index-sched] initBackupScheduler error on mount', e);
+                            }
+
+                            window.addEventListener('beforeunload', () => {
+                                try {
+                                    bc.close();
+                                } catch (e) { }
+                            });
+                        }
+                    } catch (e) {
+                        console.warn('[index] BroadcastChannel setup error:', e);
+                    }
+
+                    if (savedData) {
+                        try {
+                            const parsed = JSON.parse(savedData);
+                            let loadedEmployees = parsed.employees || [];
+                            let maxId = 0;
+                            loadedEmployees.forEach(e => {
+                                if (Number.isInteger(e.id) && e.id > maxId) maxId = e.id;
+                            });
+                            loadedEmployees = loadedEmployees.map(e => {
+                                if (!e.id || isNaN(e.id)) e.id = ++maxId;
+                                // Assurer que le type et statut existent pour les anciennes données
+                                if (!e.type) e.type = 'permanent';
+                                if (!e.statut) e.statut = 'actif';
+                                return e;
+                            });
+
+                            employees.value = loadedEmployees;
+                            attendance.value = parsed.attendance || {};
+                            payrollExtras.value = parsed.payrollExtras || {};
+                            // Charger les dimanches visibles s'ils ont été sauvegardés, sinon vide
+                            visibleSundays.value = parsed.visibleSundays || [];
+                        } catch (e) {
+                            employees.value = [];
+                        }
+                    }
+
+                    setTimeout(updateCharts, 500);
+                });
+
+                watch([employees, attendance, payrollExtras, visibleSundays], () => {
+                    const data = {
+                        employees: employees.value,
+                        attendance: attendance.value,
+                        payrollExtras: payrollExtras.value,
+                        visibleSundays: visibleSundays.value
+                    };
+                    rhDbSetItem(RH_APP_DATA_KEY, JSON.stringify(data)).catch(err => console.error('rhDb error:', err));
+                }, {
+                    deep: true
+                });
+
+                const loadStockItems = () => {
+                    try {
+                        // NOTE: stock_expert_inventory_v3 is NOT stored in index.html
+                        // Stock data stays in stock.html only via StockExpertDB
+                        // This function is kept for reference but stockItems is loaded separately
+                    } catch (e) { }
+                };
+                onMounted(() => {
+                    loadStockItems();
+                    setInterval(loadStockItems, 5000);
+                });
+
+                // --- UI HELPERS ---
+                const getWeekday = (day) => {
+                    const date = new Date(filters.value.year, filters.value.month, day);
+                    const short = ['DI', 'LU', 'MA', 'ME', 'JE', 'VE', 'SA'];
+                    return short[date.getDay()];
+                };
+                const isSunday = (day) => new Date(filters.value.year, filters.value.month, day).getDay() === 0;
+
+                // Helper to get the "current" date (either override or system)
+                const getCurrentDate = () => {
+                    if (overrideDate.value) {
+                        return new Date(overrideDate.value);
+                    }
+                    return new Date();
+                };
+
+                const isToday = (day) => {
+                    const current = getCurrentDate();
+                    return (day === current.getDate() && filters.value.month === current.getMonth() && filters.value.year === current.getFullYear());
+                };
+
+                // Backup banner UI for index.html (mirror of stock.html)
+                function showBackupBanner(message, onSave) {
+                    try {
+                        if (document.getElementById('backup-banner')) return;
+                        const div = document.createElement('div');
+                        div.id = 'backup-banner';
+                        div.setAttribute('role', 'dialog');
+                        div.style.position = 'fixed';
+                        div.style.right = '16px';
+                        div.style.bottom = '16px';
+                        div.style.zIndex = 99999;
+                        div.style.background = 'linear-gradient(180deg,#ffffff, #f3f4f6)';
+                        div.style.color = '#0f172a';
+                        div.style.padding = '12px 14px';
+                        div.style.borderRadius = '8px';
+                        div.style.boxShadow = '0 8px 24px rgba(2,6,23,0.2)';
+                        div.style.maxWidth = '320px';
+                        div.style.fontSize = '13px';
+                        div.innerHTML = `
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <div style="flex:1">${message}</div>
+                            </div>
+                            <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end">
+                                <button id="backup-now-btn" style="background:#059669;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">Sauvegarder maintenant</button>
+                                <button id="backup-dismiss-btn" style="background:transparent;color:#374151;border:1px solid #e5e7eb;padding:6px 10px;border-radius:6px;cursor:pointer">Ignorer</button>
+                            </div>
+                        `;
+                        document.body.appendChild(div);
+                        document.getElementById('backup-now-btn').addEventListener('click', function () {
+                            try {
+                                onSave && onSave();
+                            } catch (e) {
+                                console.warn(e);
+                            }
+                        });
+                        document.getElementById('backup-dismiss-btn').addEventListener('click', function () {
+                            removeBackupBanner();
+                        });
+                    } catch (e) {
+                        console.warn('showBackupBanner error', e);
+                    }
+                }
+
+                function removeBackupBanner() {
+                    try {
+                        const el = document.getElementById('backup-banner');
+                        if (el) el.remove();
+                    } catch (e) { }
+                }
+
+                function showBackupDoneBanner(iso) {
+                    try {
+                        const when = iso ? new Date(iso).toLocaleString() : new Date().toLocaleString();
+                        const id = 'backup-done-toast';
+                        if (document.getElementById(id)) return;
+                        const d = document.createElement('div');
+                        d.id = id;
+                        d.style.position = 'fixed';
+                        d.style.right = '16px';
+                        d.style.bottom = '80px';
+                        d.style.zIndex = 99999;
+                        d.style.background = '#10b981';
+                        d.style.color = 'white';
+                        d.style.padding = '10px 14px';
+                        d.style.borderRadius = '8px';
+                        d.style.boxShadow = '0 8px 24px rgba(2,6,23,0.2)';
+                        d.style.fontSize = '13px';
+                        d.textContent = `Sauvegarde effectuée: ${when}`;
+                        document.body.appendChild(d);
+                        setTimeout(() => {
+                            try {
+                                d.remove();
+                            } catch (e) { }
+                        }, 5000);
+                    } catch (e) { }
+                }
+
+                // --- Backup Scheduler (minimal client-side) ---
+                function loadBackupSchedule() {
+                    return dbGetItem(BACKUP_SCHEDULE_KEY).then(raw => {
+                        if (!raw) return null;
+                        try { return JSON.parse(raw); } catch (e) { console.warn('[index-sched] failed to parse backup schedule', e); return null; }
+                    }).catch(err => { console.warn('[index-sched] db error', err); return null; });
+                }
+
+                function mostRecentOccurrenceForSchedule(schedule, now) {
+                    if (!schedule || !schedule.enabled) return null;
+                    const day = Number(schedule.day);
+                    const time = (schedule.time || '00:00').split(':');
+                    const hour = Number(time[0] || 0);
+                    const minute = Number(time[1] || 0);
+
+                    // Start with this week's occurrence
+                    const candidate = new Date(now);
+                    // Set to the scheduled day of this week
+                    const diff = day - candidate.getDay();
+                    candidate.setDate(candidate.getDate() + diff);
+                    candidate.setHours(hour, minute, 0, 0);
+
+                    // If candidate is in the future relative to now, step back 7 days
+                    if (candidate > now) {
+                        candidate.setDate(candidate.getDate() - 7);
+                    }
+                    return candidate;
+                }
+
+                async function checkAndTriggerBackup() {
+                    try {
+                        const now = new Date();
+                        const schedule = loadBackupSchedule();
+                        if (!schedule || !schedule.enabled) return;
+
+                        const candidate = mostRecentOccurrenceForSchedule(schedule, now);
+                        if (!candidate) return;
+
+                        const lastIso = await dbGetItem(LAST_BACKUP_KEY);
+                        const last = lastIso ? new Date(lastIso) : null;
+
+                        // If last backup is after candidate, nothing to do
+                        if (last && last >= candidate) return;
+
+                        const minutesSince = Math.floor((now - candidate) / 60000);
+                        console.log('[index-sched] schedule candidate:', candidate.toISOString(), 'minutesSince=', minutesSince, 'lastBackup=', lastIso);
+
+                        // Avoid showing reminder repeatedly for same scheduled slot in this tab
+                        const promptKey = 'index_backup_prompt_' + candidate.toISOString();
+                        const alreadyPrompted = sessionStorage.getItem(promptKey);
+
+                        // Also check if the authoritative tab already recorded that a prompt was shown
+                        const stockPromptKey = 'stock_expert_backup_prompt_shown_' + candidate.toISOString().slice(0, 10);
+                        const stockPromptRecorded = !!(await dbGetItem(stockPromptKey));
+
+                        if (minutesSince < 60) {
+                            // If this tab hasn't shown a prompt yet, show it even if the stock tab recorded the prompt
+                            if (!alreadyPrompted) {
+                                sessionStorage.setItem(promptKey, '1');
+                                // Mark prompt recorded globally so other tabs know
+                                dbSetItem(stockPromptKey, '1').catch(err => console.error('Dexie error:', err));
+                                // Broadcast reminder so other tabs know (helps newly-opened tabs)
+                                try {
+                                    if ('BroadcastChannel' in window) {
+                                        const bc = new BroadcastChannel('stock_expert_sync');
+                                        bc.postMessage({
+                                            type: 'backup-reminder',
+                                            message: 'Rappel: pensez à sauvegarder votre application (RH).'
+                                        });
+                                        try {
+                                            bc.close();
+                                        } catch (e) { }
+                                    }
+                                } catch (e) { }
+
+                                // Show banner locally. This ensures tabs that missed the original broadcast still display the reminder.
+                                showBackupBanner('Rappel: pensez à sauvegarder votre application (RH).', () => {
+                                    // user clicked save -> ask authoritative tab to perform backup
+                                    try {
+                                        if ('BroadcastChannel' in window) {
+                                            const bcReq = new BroadcastChannel('stock_expert_sync');
+                                            bcReq.postMessage({
+                                                type: 'backup-request'
+                                            });
+                                            try {
+                                                bcReq.close();
+                                            } catch (e) { }
+                                        }
+                                    } catch (e) {
+                                        console.warn('[index-sched] error sending backup-request', e);
+                                    }
+                                    removeBackupBanner();
+                                });
+                            }
+                        } else {
+                            // It's been 60+ minutes since scheduled time and no backup -> request backup automatically
+                            console.log('[index-sched] scheduling automatic backup request');
+                            try {
+                                if ('BroadcastChannel' in window) {
+                                    const bcReq = new BroadcastChannel('stock_expert_sync');
+                                    bcReq.postMessage({
+                                        type: 'backup-request',
+                                        reason: 'auto-60min'
+                                    });
+                                    try {
+                                        bcReq.close();
+                                    } catch (e) { }
+                                }
+                            } catch (e) {
+                                console.warn('[index-sched] auto backup request failed', e);
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('[index-sched] checkAndTriggerBackup error', e);
+                    }
+                }
+
+                function initBackupScheduler() {
+                    try {
+                        checkAndTriggerBackup();
+                        // Re-check every 5 minutes
+                        setInterval(checkAndTriggerBackup, 5 * 60 * 1000);
+                    } catch (e) {
+                        console.warn('[index-sched] init failed', e);
+                    }
+                }
+
+                // Utilisation de resolveStatus pour la couleur
+                const getStatusClass = (empId, day) => {
+                    const s = resolveStatus(empId, day);
+                    if (!s || s === 1) return 'bg-green-50 text-green-600 hover:bg-green-100';
+                    if (s === 2) return 'bg-red-50 text-red-600 hover:bg-red-100';
+                    if (s === 3) return 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100';
+                    return '';
+                };
+                // Utilisation de resolveStatus pour l'icone interne
+                const getStatusInnerClass = (empId, day) => {
+                    const s = resolveStatus(empId, day);
+                    if (s === 1) return 'text-green-600';
+                    if (s === 2) return 'text-red-600';
+                    if (s === 3) return 'text-yellow-600';
+                    return '';
+                };
+                // Utilisation de resolveStatus pour l'icone
+                const getStatusIcon = (empId, day) => {
+                    const s = resolveStatus(empId, day);
+                    return !s || s === 1 ? 'fa-solid fa-check' : (s === 2 ? 'fa-solid fa-xmark' : 'fa-solid fa-umbrella');
+                };
+
+                const toggleStatus = (empId, day) => {
+                    // Check if dismissed OR if before start
+                    const emp = employees.value.find(e => e.id === empId);
+                    if (emp) {
+                        if (isDismissed(emp, day)) return;
+                        if (isBeforeStart(emp, day)) return; // Empêcher la modification si avant embauche
+                    }
+
+                    const key = `${empId}_${filters.value.year}-${filters.value.month}-${day}`;
+                    // On récupère le statut actuel, incluant le défaut
+                    const current = resolveStatus(empId, day);
+
+                    // Cycle: 1 -> 2 -> 3 -> 1
+                    attendance.value[key] = (current % 3) + 1;
+                };
+
+                const openModal = (emp = null) => {
+                    modalMode.value = emp ? 'edit' : 'create';
+                    form.value = emp ? {
+                        ...emp
+                    } : {
+                        id: null,
+                        type: 'permanent', // Defaut
+                        nom: '',
+                        prenom: '',
+                        site: '',
+                        salaireBase: 0,
+                        contact: '',
+                        statut: 'actif',
+                        dateRenvoi: null,
+                        dateEmbauche: null // Reset
+                    };
+                    showModal.value = true;
+                };
+                const closeModal = () => showModal.value = false;
+
+                // --- NOUVELLE FONCTION: HISTORIQUE ---
+                const openHistoryModal = (emp) => {
+                    currentHistoryEmp.value = emp;
+                    historyItems.value = [];
+                    const y = filters.value.year;
+
+                    // On parcourt les 12 mois de l'année sélectionnée
+                    for (let m = 0; m < 12; m++) {
+                        const daysInM = new Date(y, m + 1, 0).getDate();
+                        const keyMonth = `${y}-${m}`;
+                        const extrasKey = `${emp.id}_${keyMonth}`;
+                        const extras = payrollExtras.value[extrasKey] || {
+                            prime: 0,
+                            dette: 0,
+                            retenue: 0
+                        };
+
+                        let absentCount = 0;
+                        let presentCount = 0;
+                        let hasData = false;
+
+                        for (let d = 1; d <= daysInM; d++) {
+                            const dateKey = `${emp.id}_${y}-${m}-${d}`;
+                            const dateObj = new Date(y, m, d);
+                            // Logique renvoi
+                            if (emp.statut === 'renvoye' && emp.dateRenvoi) {
+                                const dismissalDate = new Date(emp.dateRenvoi);
+                                dismissalDate.setHours(0, 0, 0, 0);
+                                dateObj.setHours(0, 0, 0, 0);
+                                if (dateObj > dismissalDate) continue;
+                            }
+                            // Logique embauche (ne pas compter avant)
+                            if (emp.dateEmbauche) {
+                                const startDate = new Date(emp.dateEmbauche);
+                                startDate.setHours(0, 0, 0, 0);
+                                dateObj.setHours(0, 0, 0, 0);
+                                if (dateObj < startDate) continue;
+                            }
+
+
+                            // Utilisation logique default inside historique
+                            let status = attendance.value[dateKey];
+                            if (status !== undefined) hasData = true; // Si une action manuelle a eu lieu
+
+                            // Appliquer défaut si undefined
+                            if (status === undefined) {
+                                status = (emp.type === 'temporaire') ? 3 : 1;
+                            }
+
+                            if (status === 2 && dateObj.getDay() !== 0) absentCount++; // Absences dimanches exclues
+                            if (!status || status === 1 || status === 3) presentCount++;
+                        }
+
+                        // On affiche le mois s'il y a de la donnée ou si c'est le mois en cours ou passé
+                        if (hasData || m <= new Date().getMonth()) {
+                            const joursOuvrables = 22;
+                            const retenueAbsence = Math.round((emp.salaireBase / joursOuvrables) * absentCount);
+                            const net = Math.round(emp.salaireBase + (extras.prime || 0) - (extras.dette || 0) - (extras.retenue || 0) - retenueAbsence);
+
+                            historyItems.value.push({
+                                monthName: months[m],
+                                presentDays: presentCount,
+                                absentDays: absentCount,
+                                netPay: net > 0 ? net : 0
+                            });
+                        }
+                    }
+                    showHistoryModal.value = true;
+                };
+
+                const saveEmployee = () => {
+                    if (modalMode.value === 'create') {
+                        const maxId = employees.value.length > 0 ? Math.max(0, ...employees.value.map(e => Number(e.id) || 0)) : 0;
+                        employees.value.push({
+                            ...form.value,
+                            id: maxId + 1
+                        });
+                        showToast('Profil créé');
+                    } else {
+                        const index = employees.value.findIndex(e => e.id === form.value.id);
+                        if (index !== -1) employees.value[index] = {
+                            ...form.value
+                        };
+                        showToast('Profil mis à jour');
+                    }
+                    closeModal();
+                };
+
+                const deleteEmployee = (id) => {
+                    if (confirm('Supprimer définitivement cet employé ?')) {
+                        const initialLen = employees.value.length;
+                        employees.value = employees.value.filter(e => e.id !== id);
+                        if (employees.value.length === initialLen) employees.value = employees.value.filter(e => String(e.id) !== String(id));
+                        showToast('Employé supprimé');
+                    }
+                };
+
+                const resetAllData = () => {
+                    if (confirm("ATTENTION: Cela va effacer TOUS les employés et données. Êtes-vous sûr ?")) {
+                        employees.value = [];
+                        attendance.value = {};
+                        payrollExtras.value = {};
+                        visibleSundays.value = [];
+                        showToast('Base de données effacée');
+                    }
+                };
+
+                const downloadBackup = () => {
+                    const data = {
+                        employees: employees.value,
+                        attendance: attendance.value,
+                        payrollExtras: payrollExtras.value,
+                        visibleSundays: visibleSundays.value,
+                        meta: {
+                            date: new Date().toISOString()
+                        }
+                    };
+                    const url = URL.createObjectURL(new Blob([JSON.stringify(data)], {
+                        type: 'application/json'
+                    }));
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `echos_rh_backup_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
+                    a.click();
+                };
+                const restoreBackup = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        try {
+                            const data = JSON.parse(ev.target.result);
+                            if (data.employees) employees.value = data.employees;
+                            if (data.attendance) attendance.value = data.attendance;
+                            if (data.payrollExtras) payrollExtras.value = data.payrollExtras;
+                            if (data.visibleSundays) visibleSundays.value = data.visibleSundays;
+                            showToast('Restauration terminée');
+                        } catch (err) {
+                            alert('Fichier corrompu');
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+
+                // --- EXPORTS PDF ---
+                const removeAccents = (str) => {
+                    const accents = {
+                        'é': 'e',
+                        'è': 'e',
+                        'ê': 'e',
+                        'ë': 'e',
+                        'à': 'a',
+                        'â': 'a',
+                        'ä': 'a',
+                        'î': 'i',
+                        'ï': 'i',
+                        'ô': 'o',
+                        'ö': 'o',
+                        'û': 'u',
+                        'ü': 'u',
+                        'ç': 'c'
+                    };
+                    return str.replace(/[éèêëàâäîïôöûüç]/g, c => accents[c] || c);
+                };
+                const addPdfHeader = (doc, title) => {
+                    const pageWidth = doc.internal.pageSize.width;
+                    const dateStr = removeAccents(new Date().toLocaleDateString('fr-FR', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    }));
+                    doc.setFillColor(15, 81, 50);
+                    doc.rect(0, 0, pageWidth, 60, 'F');
+                    doc.setFillColor(255, 193, 7);
+                    doc.rect(0, 60, pageWidth, 3, 'F');
+                    if (logoSrc.value) {
+                        try {
+                            doc.addImage(logoSrc.value, 'JPEG', 10, 5, 40, 40);
+                        } catch (e) { }
+                    }
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(18);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("Echos De chez Moi", 58, 15);
+                    doc.setFontSize(11);
+                    doc.setFont("helvetica", "normal");
+                    doc.text("Services RH & Paie", 58, 25);
+                    doc.setFontSize(14);
+                    doc.setFont("helvetica", "bold");
+                    doc.text(title, pageWidth - 12, 20, {
+                        align: 'right'
+                    });
+                    doc.setFontSize(10);
+                    doc.setFont("helvetica", "normal");
+                    doc.text(dateStr, pageWidth - 12, 35, {
+                        align: 'right'
+                    });
+                    return 68;
+                };
+
+                // --- NOUVEL EXPORT HISTORIQUE ---
+                const exportHistoryPDF = () => {
+                    if (!currentHistoryEmp.value) return;
+                    const doc = new jspdf.jsPDF();
+                    const empName = removeAccents(`${currentHistoryEmp.value.nom} ${currentHistoryEmp.value.prenom}`);
+                    const startY = addPdfHeader(doc, `HISTORIQUE: ${empName} (${filters.value.year})`);
+
+                    const tableBody = historyItems.value.map(h => [
+                        removeAccents(h.monthName),
+                        h.presentDays,
+                        h.absentDays,
+                        formatMoney(h.netPay)
+                    ]);
+
+                    doc.autoTable({
+                        startY: startY,
+                        head: [
+                            ['Mois', 'Jours Travailles', 'Absences (J)', 'Net Estime']
+                        ],
+                        body: tableBody,
+                        theme: 'grid',
+                        headStyles: {
+                            fillColor: [15, 81, 50],
+                            textColor: 255
+                        },
+                        alternateRowStyles: {
+                            fillColor: [240, 253, 244]
+                        },
+                        columnStyles: {
+                            2: {
+                                textColor: [220, 53, 69],
+                                halign: 'center'
+                            },
+                            3: {
+                                halign: 'right',
+                                fontStyle: 'bold'
+                            }
+                        }
+                    });
+
+                    // Pied de page résumé
+                    const finalY = doc.lastAutoTable.finalY + 10;
+                    doc.setFontSize(10);
+                    doc.setTextColor(100);
+                    doc.text("Ce document est un récapitulatif annuel généré automatiquement.", 15, finalY);
+
+                    doc.save(`historique_${empName.replace(/ /g, '_')}_${filters.value.year}.pdf`);
+                };
+
+                const exportEmployees = (type) => {
+                    if (type === 'excel') {
+                        const data = filteredEmployees.value.map(e => ({
+                            Nom: e.nom,
+                            Prénom: e.prenom,
+                            Type: e.type === 'temporaire' ? 'Temporaire' : 'Permanent',
+                            Statut: e.statut === 'renvoye' ? 'Renvoyé' : 'Actif',
+                            Site: e.site,
+                            Contact: e.contact || '',
+                            Salaire: e.salaireBase
+                        }));
+                        const ws = XLSX.utils.json_to_sheet(data);
+                        const wb = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(wb, ws, "Employés");
+                        XLSX.writeFile(wb, "echos_employes.xlsx");
+                    } else {
+                        const doc = new jspdf.jsPDF();
+                        const startY = addPdfHeader(doc, "LISTE DU PERSONNEL");
+                        const tableData = filteredEmployees.value.map(e => [
+                            e.nom,
+                            e.prenom,
+                            e.type === 'temporaire' ? 'TEMP' : 'CDI/CDD',
+                            e.statut === 'renvoye' ? 'RENVOYÉ' : 'ACTIF',
+                            e.site,
+                            e.contact || '',
+                            formatMoney(e.salaireBase)
+                        ]);
+                        doc.autoTable({
+                            startY: startY,
+                            head: [
+                                ['Nom', 'Prénom', 'Type', 'Statut', 'Site', 'Contact', 'Salaire']
+                            ],
+                            body: tableData,
+                            theme: 'grid',
+                            headStyles: {
+                                fillColor: [15, 81, 50],
+                                textColor: 255
+                            },
+                            alternateRowStyles: {
+                                fillColor: [240, 253, 244]
+                            },
+                            didParseCell: function (data) {
+                                if (data.section === 'body' && data.column.index === 3) {
+                                    if (data.cell.raw === 'RENVOYÉ') data.cell.styles.textColor = [220, 53, 69];
+                                }
+                            }
+                        });
+                        doc.save("echos_personnel.pdf");
+                    }
+                };
+
+                const exportAttendance = (type) => {
+                    const doc = new jspdf.jsPDF('l');
+                    const monthName = removeAccents(months[filters.value.month]);
+                    const startY = addPdfHeader(doc, `POINTAGE: ${monthName} ${filters.value.year}`);
+
+                    // Utiliser workDays pour l'export aussi
+                    const exportDays = workDays.value;
+
+                    const headers = ['Nom', ...exportDays.map(d => d.toString()), 'Total Absences'];
+                    const body = filteredEmployees.value.map(emp => {
+                        const row = [`${emp.nom} ${emp.prenom}`];
+                        let absentCount = 0;
+
+                        // Calcul d'absence sur TOUT le mois (meme dimanches si c'etait marqué, mais ici on affiche que les jours ouvrables)
+                        // Pour la coherence de la table, on itere sur exportDays
+                        exportDays.forEach(d => {
+                            if (isDismissed(emp, d)) {
+                                row.push('-'); // Signifie Fin contrat
+                            } else if (isBeforeStart(emp, d)) {
+                                row.push('-'); // Signifie Pas encore arrivé
+                            } else {
+                                const key = `${emp.id}_${filters.value.year}-${filters.value.month}-${d}`;
+                                let s = attendance.value[key];
+                                // Default logic
+                                if (s === undefined) s = (emp.type === 'temporaire') ? 3 : 1;
+
+                                const status = !s || s === 1 ? '.' : (s === 2 ? 'ABS' : 'J');
+                                row.push(status);
+                            }
+                        });
+
+                        // Le total d'absence doit quand meme refleter la realité complete
+                        for (let d = 1; d <= daysInMonth.value; d++) {
+                            // Ignorer jours après renvoi
+                            if (isDismissed(emp, d)) continue;
+                            // Ignorer jours avant embauche
+                            if (isBeforeStart(emp, d)) continue;
+
+                            const key = `${emp.id}_${filters.value.year}-${filters.value.month}-${d}`;
+                            let s = attendance.value[key];
+                            if (s === undefined) s = (emp.type === 'temporaire') ? 3 : 1;
+
+                            const dateObj = new Date(filters.value.year, filters.value.month, d);
+                            if (s === 2 && dateObj.getDay() !== 0) absentCount++;
+                        }
+
+                        row.push(absentCount.toString());
+                        return row;
+                    });
+
+                    doc.autoTable({
+                        startY: startY,
+                        head: [headers],
+                        body: body,
+                        styles: {
+                            fontSize: 8,
+                            cellPadding: 2
+                        },
+                        columnStyles: {
+                            0: {
+                                cellWidth: 40,
+                                fontStyle: 'bold',
+                                halign: 'left'
+                            },
+                            [exportDays.length + 1]: {
+                                fontStyle: 'bold',
+                                fillColor: [240, 253, 244],
+                                halign: 'center'
+                            }
+                        },
+                        headStyles: {
+                            fillColor: [15, 81, 50],
+                            textColor: 255,
+                            fontSize: 8,
+                            cellPadding: 2
+                        },
+                        didParseCell: function (data) {
+                            if (data.section === 'body' && data.column.index > 0 && data.column.index <= exportDays.length) {
+                                if (data.cell.raw === 'ABS') data.cell.styles.textColor = [220, 53, 69];
+                            }
+                        }
+                    });
+                    doc.save("echos_pointage.pdf");
+                };
+
+                const exportAttendanceToday = (type) => {
+                    const doc = new jspdf.jsPDF();
+                    const current = getCurrentDate();
+                    const currentDay = current.getDate();
+                    const currentMonth = current.getMonth();
+                    const currentYear = current.getFullYear();
+                    const dateStr = removeAccents(current.toLocaleDateString('fr-FR', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    }));
+                    const startY = addPdfHeader(doc, `PRESENCE DU JOUR - ${dateStr}`);
+                    const headers = ['Employe', 'Statut'];
+                    const body = filteredEmployees.value.map(emp => {
+                        // Si renvoyé avant aujourd'hui, on l'exclut ou on le marque
+                        if (isDismissed(emp, currentDay)) {
+                            return [`${emp.nom} ${emp.prenom}`, 'Fin Contrat'];
+                        }
+                        // Si pas encore là
+                        if (isBeforeStart(emp, currentDay)) {
+                            return [`${emp.nom} ${emp.prenom}`, 'Pas encore embauché'];
+                        }
+
+
+                        const key = `${emp.id}_${currentYear}-${currentMonth}-${currentDay}`;
+                        let s = attendance.value[key];
+                        // Default logic
+                        if (s === undefined) s = (emp.type === 'temporaire') ? 3 : 1;
+
+                        const statusText = !s || s === 1 ? 'Présent' : (s === 2 ? 'Absent' : 'Justifié');
+                        return [`${emp.nom} ${emp.prenom}`, statusText];
+                    });
+                    doc.autoTable({
+                        startY: startY,
+                        head: [headers],
+                        body: body,
+                        theme: 'grid',
+                        columnStyles: {
+                            0: {
+                                cellWidth: 100,
+                                halign: 'left'
+                            },
+                            1: {
+                                cellWidth: 50,
+                                halign: 'center'
+                            }
+                        },
+                        headStyles: {
+                            fillColor: [15, 81, 50],
+                            textColor: 255,
+                            fontSize: 11,
+                            cellPadding: 5
+                        },
+                        bodyStyles: {
+                            cellPadding: 4,
+                            fontSize: 10
+                        },
+                        alternateRowStyles: {
+                            fillColor: [240, 253, 244]
+                        },
+                        didParseCell: function (data) {
+                            if (data.section === 'body' && data.column.index === 1) {
+                                if (data.cell.raw === 'Absent') {
+                                    data.cell.styles.textColor = [220, 53, 69];
+                                    data.cell.styles.fontStyle = 'bold';
+                                } else if (data.cell.raw === 'Justifié') {
+                                    data.cell.styles.textColor = [255, 193, 7];
+                                    data.cell.styles.fontStyle = 'bold';
+                                } else if (data.cell.raw === 'Présent') {
+                                    data.cell.styles.textColor = [34, 197, 94];
+                                    data.cell.styles.fontStyle = 'bold';
+                                } else if (data.cell.raw === 'Fin Contrat' || data.cell.raw === 'Pas encore embauché') {
+                                    data.cell.styles.textColor = [156, 163, 175];
+                                    data.cell.styles.fontStyle = 'italic';
+                                }
+                            }
+                        }
+                    });
+                    doc.save(`echos_presence_${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(currentDay).padStart(2, '0')}.pdf`);
+                };
+
+                const exportPayroll = (type) => {
+                    if (type === 'pdf') {
+                        const doc = new jspdf.jsPDF();
+                        let y = addPdfHeader(doc, "BULLETINS DE PAIE");
+                        payrollData.value.forEach((p, i) => {
+                            if (y > 220) {
+                                doc.addPage();
+                                y = addPdfHeader(doc, "BULLETINS DE PAIE (Suite)");
+                            }
+                            doc.setDrawColor(15, 81, 50);
+                            doc.setLineWidth(0.5);
+                            doc.rect(10, y, 190, 60);
+                            doc.setFillColor(240, 253, 244);
+                            doc.rect(10, y, 190, 10, 'F');
+                            doc.setFontSize(11);
+                            doc.setTextColor(15, 81, 50);
+                            doc.setFont("helvetica", "bold");
+                            doc.text(`${p.emp.nom} ${p.emp.prenom}  |  ${p.emp.site}`, 15, y + 7);
+                            if (p.emp.type === 'temporaire') {
+                                doc.setFontSize(8);
+                                doc.setTextColor(100);
+                                doc.text("(Temporaire)", 100, y + 7);
+                            }
+                            if (p.emp.statut === 'renvoye') {
+                                doc.setFontSize(8);
+                                doc.setTextColor(220, 53, 69);
+                                doc.text("(FIN CONTRAT)", 130, y + 7);
+                            }
+
+                            doc.setTextColor(0);
+                            doc.setFont("helvetica", "normal");
+                            doc.setFontSize(10);
+                            let ly = y + 18;
+                            const rightColX = 140;
+                            const valX = 190;
+                            doc.text("Salaire de Base:", 15, ly);
+                            doc.text(formatMoney(p.salaireBase), 90, ly, {
+                                align: 'right'
+                            });
+                            doc.text("Primes:", rightColX, ly);
+                            doc.text(`+ ${formatMoney(p.extras.prime || 0)}`, valX, ly, {
+                                align: 'right'
+                            });
+                            ly += 6;
+                            const totalRetenue = (p.extras.retenue || 0) + p.retenueAbsence;
+                            doc.text(`Absences (${p.absentDays}j) & Retenues:`, 15, ly);
+                            doc.text(`- ${formatMoney(totalRetenue)}`, 90, ly, {
+                                align: 'right'
+                            });
+                            doc.text("Dettes / Avances:", rightColX, ly);
+                            doc.text(`- ${formatMoney(p.extras.dette || 0)}`, valX, ly, {
+                                align: 'right'
+                            });
+                            ly += 12;
+                            doc.setDrawColor(200);
+                            doc.line(15, ly, 195, ly);
+                            ly += 8;
+                            doc.setFontSize(14);
+                            doc.setFont("helvetica", "bold");
+                            doc.text("NET A PAYER", 15, ly);
+                            doc.setTextColor(15, 81, 50);
+                            doc.text(formatMoney(p.net), valX, ly, {
+                                align: 'right'
+                            });
+                            y += 65;
+                        });
+                        doc.save("echos_bulletins.pdf");
+                    }
+                };
+
+                // --- DOM READY ---
+                document.addEventListener('DOMContentLoaded', function () {
+                    // Migrer les anciennes données RH si nécessaire
+                    migrateRHDataToRhDb().catch(err => console.error('Migration RH error:', err));
+
+                    const app = document.getElementById('app');
+                    const sidebar = document.getElementById('sidebar');
+                    const desktopToggle = document.getElementById('desktopSidebarToggle');
+                    const mobileToggle = document.getElementById('mobileSidebarToggle');
+                    const overlay = document.getElementById('overlay');
+                    const minWidthForDesktop = 1024;
+
+                    if (mobileToggle) {
+                        mobileToggle.addEventListener('click', () => {
+                            const isOpen = sidebar.classList.toggle('open');
+                            overlay.classList.toggle('active', isOpen);
+                            if (window.innerWidth < minWidthForDesktop) {
+                                document.body.style.overflow = isOpen ? 'hidden' : 'auto';
+                            }
+                        });
+                    }
+                    if (desktopToggle) {
+                        desktopToggle.addEventListener('click', () => {
+                            if (window.innerWidth >= minWidthForDesktop) {
+                                app.classList.toggle('sidebar-collapsed');
+                            }
+                        });
+                    }
+                    if (overlay) {
+                        overlay.addEventListener('click', () => {
+                            if (window.innerWidth < minWidthForDesktop) {
+                                sidebar.classList.remove('open');
+                                overlay.classList.remove('active');
+                                document.body.style.overflow = 'auto';
+                            }
+                        });
+                    }
+
+                    function handleResize() {
+                        if (window.innerWidth >= minWidthForDesktop) {
+                            sidebar.classList.remove('open');
+                            overlay.classList.remove('active');
+                            document.body.style.overflow = 'auto';
+                        } else {
+                            app.classList.remove('sidebar-collapsed');
+                        }
+                    }
+                    handleResize();
+                    window.addEventListener('resize', handleResize);
+
+                    // === APPLY LIQUID GLASS TO UI ===
+                    function applyGlassToUI() {
+                        dbGetItem(GLASS_ENABLED_KEY).then(enabledStr => {
+                            const enabled = (enabledStr || 'true') === 'true';
+                            const cardSelectors = ['.bg-white', '.bg-brand-green', '.bg-blue-50', '.bg-gray-50', '.bg-gray-100', '.rounded-xl', '.rounded-2xl', '.rounded-lg', '.modal', '.card', '.panel', '.toast'];
+                            const interactiveSelectors = ['button', 'input[type="text"]', 'input[type="number"]', 'input[type="date"]', 'input[type="email"]', 'input[type="tel"]', 'input[type="password"]', 'select', 'textarea', 'a', '.btn-brand', '.status-btn', '.btn', '[role="button"]'];
+                            const dropdownSelectors = ['[role="listbox"]', '[role="menu"]', '.dropdown-menu', '.dropdown-content', '.menu-list', '.menu', '.menu-item', '.options-panel', '.select-options', '.choices__list', '.choices__list--dropdown', '.choices__item', '.select__menu', '.select-dropdown', '.select2-dropdown', '.select2-results__options', '.v-popper', '.popper', '.tippy-box', '.popover'];
+
+                            // Remove glass from sidebar explicitly
+                            const sidebar = document.getElementById('sidebar');
+                            if (sidebar) {
+                                sidebar.classList.remove('glass', 'interactive');
+                                sidebar.querySelectorAll('.glass').forEach(el => el.classList.remove('glass', 'interactive'));
+                            }
+
+                            // Apply glass to cards/panels
+                            cardSelectors.forEach(sel => {
+                                document.querySelectorAll(sel).forEach(el => {
+                                    if (el.closest && el.closest('#sidebar')) return;
+                                    if (enabled) el.classList.add('glass');
+                                    else el.classList.remove('glass');
+                                });
+                            });
+
+                            // Apply glass + interactive to all interactive elements
+                            interactiveSelectors.forEach(sel => {
+                                document.querySelectorAll(sel).forEach(el => {
+                                    if (el.closest && el.closest('#sidebar')) return;
+                                    if (enabled) {
+                                        el.classList.add('glass', 'interactive');
+                                    } else {
+                                        el.classList.remove('glass', 'interactive');
+                                    }
+                                });
+                            });
+
+                            // Apply glass to dropdowns that may be appended to body
+                            dropdownSelectors.forEach(sel => {
+                                document.querySelectorAll(sel).forEach(el => {
+                                    if (el.closest && el.closest('#sidebar')) return;
+                                    if (enabled) el.classList.add('glass');
+                                    else el.classList.remove('glass');
+                                });
+                            });
+                        }).catch(err => console.error('Dexie error:', err));
+                    }
+                    // Run once on load
+                    applyGlassToUI();
+
+                    // Re-apply when preference changes in other tabs
+                    window.addEventListener('storage', (e) => {
+                        if (e.key === GLASS_ENABLED_KEY) applyGlassToUI();
+                    });
+
+                    // Listen for glass settings changes from stock.html via BroadcastChannel
+                    try {
+                        if ('BroadcastChannel' in window) {
+                            const bc = new BroadcastChannel('stock_expert_sync');
+                            bc.addEventListener('message', (ev) => {
+                                const msg = ev.data || {};
+                                if (msg.type === 'glass-settings') {
+                                    if (msg.opacity !== undefined) {
+                                        const opacityPercent = msg.opacity;
+                                        const opacityLight = 0.62 * (opacityPercent / 100);
+                                        const opacityDark = 0.04 * (opacityPercent / 100);
+                                        document.documentElement.style.setProperty('--glass-opacity-light', opacityLight);
+                                        document.documentElement.style.setProperty('--glass-opacity-dark', opacityDark);
+                                        dbSetItem('stock_expert_glass_opacity', String(msg.opacity)).catch(err => console.error('Dexie error:', err));
+                                    }
+                                    if (msg.enabled !== undefined) {
+                                        dbSetItem(GLASS_ENABLED_KEY, msg.enabled ? 'true' : 'false').catch(err => console.error('Dexie error:', err));
+                                        if (msg.enabled) {
+                                            document.documentElement.classList.remove('no-glass');
+                                        } else {
+                                            document.documentElement.classList.add('no-glass');
+                                        }
+                                        applyGlassToUI();
+                                    }
+                                }
+                            });
+                        }
+                    } catch (e) { }
+
+                    // Observe dynamic DOM additions to apply glass classes
+                    const appRoot = document.getElementById('app');
+                    if (appRoot) {
+                        const observer = new MutationObserver(mutations => {
+                            dbGetItem(GLASS_ENABLED_KEY).then(enabledStr => {
+                                const enabled = (enabledStr || 'true') === 'true';
+                                if (!enabled) return;
+                                mutations.forEach(m => {
+                                    m.addedNodes.forEach(node => {
+                                        if (node.nodeType !== 1) return;
+                                        if (node.closest && node.closest('#sidebar')) return;
+                                        try {
+                                            // Apply glass to cards
+                                            ['.bg-white', '.bg-brand-green', '.bg-gray-50', '.rounded-xl', '.modal', '.card'].forEach(sel => {
+                                                if (node.matches && node.matches(sel)) node.classList.add('glass');
+                                                else if (node.querySelectorAll) node.querySelectorAll(sel).forEach(el => {
+                                                    if (!el.closest || !el.closest('#sidebar')) el.classList.add('glass');
+                                                });
+                                            });
+                                            // Apply glass + interactive to all interactive elements
+                                            if (node.matches && ['button', 'input', 'select', 'textarea', 'a'].includes(node.tagName.toLowerCase())) {
+                                                node.classList.add('glass', 'interactive');
+                                            }
+                                            if (node.querySelectorAll) {
+                                                node.querySelectorAll('button, input, select, textarea, a, .btn-brand, .status-btn').forEach(el => {
+                                                    if (!el.closest || !el.closest('#sidebar')) el.classList.add('glass', 'interactive');
+                                                });
+                                            }
+                                        } catch (e) { }
+                                    });
+                                });
+                            }).catch(err => console.error('Dexie error:', err));
+                        });
+                        observer.observe(appRoot, { childList: true, subtree: true });
+                    }
+
+                    // Observe body-level additions too (dropdowns appended to body)
+                    const bodyObserver = new MutationObserver(mutations => {
+                        dbGetItem(GLASS_ENABLED_KEY).then(enabledStr => {
+                            const enabled = (enabledStr || 'true') === 'true';
+                            if (!enabled) return;
+                            const dropdownSelectors = ['[role="listbox"]', '[role="menu"]', '.dropdown-menu', '.dropdown-content', '.menu-list', '.menu', '.menu-item', '.options-panel', '.select-options', '.choices__list', '.choices__list--dropdown', '.choices__item', '.select__menu', '.select-dropdown', '.select2-dropdown', '.select2-results__options', '.v-popper', '.popper', '.tippy-box', '.popover'];
+                            mutations.forEach(m => {
+                                m.addedNodes.forEach(node => {
+                                    if (node.nodeType !== 1) return;
+                                    try {
+                                        // If the added node itself matches a dropdown selector, apply
+                                        dropdownSelectors.forEach(sel => {
+                                            if (node.matches && node.matches(sel)) {
+                                                if (!node.closest || !node.closest('#sidebar')) node.classList.add('glass');
+                                            }
+                                        });
+                                        // Also scan descendants for dropdowns
+                                        dropdownSelectors.forEach(sel => {
+                                            node.querySelectorAll && node.querySelectorAll(sel).forEach(el => {
+                                                if (!el.closest || !el.closest('#sidebar')) el.classList.add('glass');
+                                            });
+                                        });
+                                    } catch (e) { }
+                                });
+                            });
+                        }).catch(err => console.error('Dexie error:', err));
+                    });
+                    bodyObserver.observe(document.body, { childList: true, subtree: true });
+                });
+
+                return {
+                    sites,
+                    months,
+                    filters,
+                    daysInMonth,
+                    workDays,
+                    currentTab,
+                    employees,
+                    filteredEmployees,
+                    filteredEmployeesForDisplay,
+                    employeesVisibleInPointage, // NOUVEAU
+                    attendance,
+                    payrollData,
+                    totals,
+                    modalMode,
+                    showModal,
+                    form,
+                    toast,
+                    logoSrc,
+                    companyName,
+                    importTargetSite,
+                    stockItems,
+                    kpiData,
+                    visibleSundays,
+                    overrideDate, // Date override for pointage
+                    pointageLimit,
+                    limitedEmployees,
+                    loadMorePointage,
+                    openModal,
+                    closeModal,
+                    saveEmployee,
+                    deleteEmployee,
+                    resetAllData,
+                    toggleStatus,
+                    getStatusClass,
+                    getStatusInnerClass,
+                    getStatusIcon,
+                    importEmployeesFile,
+                    toggleTheme,
+                    downloadBackup,
+                    restoreBackup,
+                    exportEmployees,
+                    exportAttendance,
+                    exportAttendanceToday,
+                    exportPayroll,
+                    formatMoney,
+                    getWeekday,
+                    isSunday,
+                    isToday,
+                    isNextSundayVisible,
+                    toggleNextSunday,
+                    pieChartEl,
+                    barChartEl,
+                    tempChartEl, // NOUVEAU
+                    isDismissed,
+                    isBeforeStart, // NOUVEAU HELPER
+                    showHistoryModal,
+                    currentHistoryEmp,
+                    historyItems,
+                    openHistoryModal,
+                    exportHistoryPDF,
+                    importInput,
+                    backupInput
+                };
+            }
+        }).mount('#app');
+    </script>
+
+    <!-- Tutoriel modal (index) - styled to match theme -->
+    <div id="tutorialModalIndex"
+        class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all">
+            <div class="px-6 py-4 border-b flex justify-between items-center"
+                style="background:var(--brand-green); color:#fff;">
+                <h3 class="font-bold">Tutoriel — RH</h3>
+                <button onclick="closeTutorialIndex()" class="text-white px-2 py-1">Fermer</button>
+            </div>
+            <div class="p-6">
+                <h4 id="tutorialTitleIndex" class="text-lg font-bold mb-2"></h4>
+                <div id="tutorialContentIndex" class="text-sm text-gray-700"></div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 flex justify-between gap-3 border-t">
+                <button id="tutorialPrevIndex" onclick="prevTutorialIndex()"
+                    class="px-4 py-2 bg-gray-100 rounded">Précédent</button>
+                <div class="flex gap-2">
+                    <button id="tutorialNextIndex" onclick="nextTutorialIndex()" class="px-4 py-2"
+                        style="background:var(--brand-green); color:#fff; border-radius:6px;">Suivant</button>
+                    <button onclick="closeTutorialIndex()" class="px-4 py-2 bg-gray-200 rounded">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+<script>
+    (function installDateHelpers() {
+        function pad(n) { return n < 10 ? '0' + n : n; }
+        function todayStrings() {
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = pad(now.getMonth() + 1);
+            const dd = pad(now.getDate());
+            const isoDate = `${yyyy}-${mm}-${dd}`;
+            const hh = pad(now.getHours());
+            const min = pad(now.getMinutes());
+            const isoDateTime = `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+            return { isoDate, isoDateTime };
+        }
+
+        window.resetDates = function (container) {
+            const { isoDate, isoDateTime } = todayStrings();
+            let selector = 'input[type="date"], input[type="datetime-local"]';
+            let inputs;
+            if (container) {
+                inputs = container.querySelectorAll(selector);
+            } else {
+                inputs = document.querySelectorAll(selector);
+            }
+            inputs.forEach(input => {
+                if (input.type === 'date') {
+                    input.value = isoDate;
+                } else {
+                    input.value = isoDateTime;
+                }
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.resetDates();
+        });
+    })();
+</script>
+
+</html>
