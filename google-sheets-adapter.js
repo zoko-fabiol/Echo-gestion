@@ -11,7 +11,8 @@ console.log('%c STOCK EXPERT FIREBASE SYNC ACTIVE ', 'background: #14522D; color
     const FIREBASE_SDK_URLS = [
         'https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js',
         'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js',
-        'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js'
+        'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js',
+        'https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js'
     ];
     const COLLECTIONS = [
         'inventory',
@@ -24,7 +25,8 @@ console.log('%c STOCK EXPERT FIREBASE SYNC ACTIVE ', 'background: #14522D; color
         'productions',
         'rawMaterials',
         'rhAppData',
-        'userAccounts'
+        'userAccounts',
+        'appSettings'
     ];
 
     let firebaseLoadPromise = null;
@@ -32,6 +34,7 @@ console.log('%c STOCK EXPERT FIREBASE SYNC ACTIVE ', 'background: #14522D; color
     let firebaseApp = null;
     let firestore = null;
     let auth = null;
+    let storage = null;
     let realtimeUnsubs = [];
     let realtimeTimer = null;
     let syncQueuePromise = Promise.resolve();
@@ -384,6 +387,14 @@ console.log('%c STOCK EXPERT FIREBASE SYNC ACTIVE ', 'background: #14522D; color
                 }
             }
             auth = firebaseApp.auth ? firebaseApp.auth() : null;
+            // Initialise Firebase Storage if SDK was loaded
+            try {
+                storage = (firebaseApp.storage && window.firebase && window.firebase.storage) ? firebaseApp.storage() : null;
+                if (storage) console.info('Firebase Storage initialisé.');
+            } catch (storageErr) {
+                console.warn('Firebase Storage non disponible', storageErr);
+                storage = null;
+            }
 
             // Anonymous sign-in removed - app uses explicit email/password or Microsoft OAuth.
             // The Firestore adapter operates with the currently authenticated user or without auth.
@@ -405,6 +416,21 @@ console.log('%c STOCK EXPERT FIREBASE SYNC ACTIVE ', 'background: #14522D; color
             const doc = await firestore.collection(collectionName).doc('current').get();
             return doc.exists ? deserializeRhAppData(doc.data()) : [];
         }
+        if (collectionName === 'appSettings') {
+            try {
+                const doc = await firestore.collection('appSettings').doc('settings').get();
+                if (!doc.exists) return [];
+                const data = doc.data();
+                // Deserialise companyInfo if stored as JSON string
+                if (data.companyInfo && typeof data.companyInfo === 'string') {
+                    try { data.companyInfo = JSON.parse(data.companyInfo); } catch (ignore) {}
+                }
+                return [{ id: 'settings', ...data }];
+            } catch (err) {
+                console.warn('collectionToArray appSettings failed', err);
+                return [];
+            }
+        }
         const snapshot = await firestore.collection(collectionName).get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
@@ -414,6 +440,32 @@ console.log('%c STOCK EXPERT FIREBASE SYNC ACTIVE ', 'background: #14522D; color
 
         // Allow items to be either an array or a single object (rhAppData uses a single doc)
         const sourceItems = Array.isArray(items) ? items : (items ? [items] : []);
+
+        if (collectionName === 'appSettings') {
+            // Dedicated single-document write for app settings (logo URL, theme, company info)
+            const s = (sourceItems.length > 0 ? sourceItems[0] : {}) || {};
+            const doc = {
+                updatedAt: Date.now(),
+                deviceId: getDeviceId()
+            };
+            // Store logo if it is a remote URL or a compressed base64 blob
+            if (s.logoUrl && typeof s.logoUrl === 'string' && (s.logoUrl.startsWith('http') || s.logoUrl.startsWith('data:image/'))) {
+                doc.logoUrl = s.logoUrl;
+            }
+            if (s.themeColor != null) doc.themeColor = s.themeColor;
+            if (s.theme != null) doc.theme = s.theme;
+            if (s.companyName != null) doc.companyName = s.companyName;
+            if (s.companyContact != null) doc.companyContact = s.companyContact;
+            if (s.companyFooter != null) doc.companyFooter = s.companyFooter;
+            try {
+                await firestore.collection('appSettings').doc('settings').set(doc, { merge: true });
+                console.info('appSettings écrit dans Firestore', doc);
+            } catch (err) {
+                console.warn('writeCollection appSettings failed', err);
+            }
+            return;
+        }
+
         if (sourceItems.length === 0) return;
 
         if (collectionName === 'rhAppData') {
@@ -512,6 +564,24 @@ console.log('%c STOCK EXPERT FIREBASE SYNC ACTIVE ', 'background: #14522D; color
             }
         } catch (err) {
             console.warn('captureLocalStateAsync: failed reading dbUserAccounts', err);
+        }
+
+        // Build appSettings entry — logo URL only (base64 blobs are too large for Firestore)
+        try {
+            const logoValue = localStorage.getItem('stock_expert_logo') || null;
+            const logoUrl = (logoValue && (logoValue.startsWith('http') || logoValue.startsWith('data:image/'))) ? logoValue : null;
+            const ci = window.companyInfo || {};
+            state.appSettings = [{
+                id: 'settings',
+                logoUrl: logoUrl,
+                themeColor: localStorage.getItem('stock_expert_theme_color') || null,
+                theme: localStorage.getItem('stock_expert_theme') || null,
+                companyName: ci.name || null,
+                companyContact: ci.contact || null,
+                companyFooter: ci.footer || null
+            }];
+        } catch (err) {
+            console.warn('captureLocalStateAsync: failed building appSettings', err);
         }
 
         return state;
@@ -799,6 +869,21 @@ console.log('%c STOCK EXPERT FIREBASE SYNC ACTIVE ', 'background: #14522D; color
             state[collectionName] = await collectionToArray(collectionName);
         }
 
+        // Extract app settings (logo, theme, company info) from appSettings collection
+        if (Array.isArray(state.appSettings) && state.appSettings.length > 0) {
+            const s = state.appSettings[0];
+            if (s.logoUrl) state.logo = s.logoUrl;
+            if (s.themeColor) state.themeColor = s.themeColor;
+            if (s.theme) state.theme = s.theme;
+            if (s.companyName || s.companyContact || s.companyFooter) {
+                state.companyInfo = {
+                    name: s.companyName || '',
+                    contact: s.companyContact || '',
+                    footer: s.companyFooter || ''
+                };
+            }
+        }
+
         return state;
     }
 
@@ -983,4 +1068,22 @@ console.log('%c STOCK EXPERT FIREBASE SYNC ACTIVE ', 'background: #14522D; color
 
     window.GoogleSheetsAdapter = adapter;
     window.FirebaseSyncAdapter = adapter;
+
+    /**
+     * Upload a File to Firebase Storage and return the public download URL.
+     * Usage: const url = await window.FirebaseUploadImage(file, 'logos/company_logo.png');
+     */
+    window.FirebaseUploadImage = async function (file, storagePath) {
+        if (!storage) {
+            await ensureInitialized();
+        }
+        if (!storage) {
+            throw new Error('Firebase Storage non disponible. Vérifiez votre configuration Firebase.');
+        }
+        const ref = storage.ref(storagePath);
+        const snapshot = await ref.put(file);
+        const url = await snapshot.ref.getDownloadURL();
+        console.info('FirebaseUploadImage OK:', url);
+        return url;
+    };
 })();

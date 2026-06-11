@@ -58,6 +58,60 @@ const CLIENTS_KEY = 'stock_expert_clients_v2';
 const SUPPLIERS_KEY = 'stock_expert_suppliers_v1';
 const QUOTES_KEY = 'stock_expert_quotes_v1'; // NOUVEAU
 const BACKUP_SCHEDULE_KEY = 'stock_expert_backup_schedule_v1';
+
+// NOUVEAU: Fonction de compression des images/logos (avec support de la transparence)
+function compressImage(file, maxWidth = 300, maxHeight = 300) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = new Image();
+            img.onload = function () {
+                let width = img.width;
+                let height = img.height;
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                
+                // Effacer le canvas pour préserver la transparence
+                ctx.clearRect(0, 0, width, height);
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                try {
+                    // Utiliser image/png pour conserver le canal Alpha (transparence)
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const arr = dataUrl.split(',');
+                    const mime = arr[0].match(/:(.*?);/)[1];
+                    const bstr = atob(arr[1]);
+                    let n = bstr.length;
+                    const u8arr = new Uint8Array(n);
+                    while (n--) {
+                        u8arr[n] = bstr.charCodeAt(n);
+                    }
+                    const blob = new Blob([u8arr], { type: mime });
+                    resolve({ blob: blob, dataUrl: dataUrl });
+                } catch (err) {
+                    reject(err);
+                }
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
 const LAST_BACKUP_KEY = 'stock_expert_last_backup_v1';
 const BACKUP_LOCK_KEY = 'stock_expert_backup_lock_v1';
 
@@ -1671,6 +1725,9 @@ window.applyRemoteStateFromCloud = async function (state) {
         }
         if (state.logo !== undefined && state.logo !== null) {
             localStorage.setItem(LOGO_KEY, state.logo);
+            // Apply logo immediately to the page
+            const appLogoEl = document.getElementById('appLogo');
+            if (appLogoEl && state.logo) appLogoEl.src = state.logo;
         }
         if (state.theme !== undefined && state.theme !== null) {
             localStorage.setItem(THEME_KEY, state.theme);
@@ -1737,30 +1794,36 @@ function handleLogoUpload(input) {
 }
 
 function handleLogoUploadFromSettings(input) {
-    const file = input.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const logoData = e.target.result;
-            // Update the main logo in header
-            const img = document.getElementById('appLogo');
-            if (img) img.src = logoData;
-            // Save to localStorage
-            localStorage.setItem(LOGO_KEY, logoData);
-            // Sync to Dexie (unified DB) for cross-page sync
-            if (typeof dbStorage !== 'undefined') {
-                dbStorage.setItem(LOGO_KEY, logoData).catch(err => console.warn('Error saving logo to Dexie:', err));
-            }
-            // Also update invoice logo placeholder
-            const invoiceLogo = document.getElementById('invoice-logo');
-            if (invoiceLogo) invoiceLogo.src = logoData;
-            // Trigger storage event for index.html to listen
-            window.dispatchEvent(new Event('storage'));
-            // Clear the input
-            input.value = '';
-            alert('Logo mis à jour avec succés !');
-        };
-        reader.readAsDataURL(file);
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        if (typeof showToast === 'function') showToast('Compression du logo en cours...', 'info');
+        compressImage(file, 300, 300, 0.7)
+            .then(({ dataUrl }) => {
+                // Update the main logo in header
+                const img = document.getElementById('appLogo');
+                if (img) img.src = dataUrl;
+                // Save to localStorage
+                localStorage.setItem(LOGO_KEY, dataUrl);
+                // Sync to Dexie (unified DB) for cross-page sync
+                if (typeof dbStorage !== 'undefined') {
+                    dbStorage.setItem(LOGO_KEY, dataUrl).catch(err => console.warn('Error saving logo to Dexie:', err));
+                }
+                // Also update invoice logo placeholder
+                const invoiceLogo = document.getElementById('invoice-logo');
+                if (invoiceLogo) invoiceLogo.src = dataUrl;
+                // Clear the input
+                input.value = '';
+
+                if (typeof showToast === 'function') showToast('Logo mis à jour et synchronisé sur Firestore !', 'success');
+                if (typeof _debouncedStockSyncUp === 'function') _debouncedStockSyncUp();
+                
+                // Trigger storage event for index.html to listen
+                window.dispatchEvent(new Event('storage'));
+            })
+            .catch(err => {
+                console.error('Erreur compression logo:', err);
+                alert('Erreur lors du traitement de l\'image.');
+            });
     }
 }
 
@@ -4386,29 +4449,7 @@ function updateThemeColor(color) {
     }
 }
 
-function handleLogoUploadFromSettings(input) {
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-        const reader = new FileReader();
-
-        reader.onload = function (e) {
-            const base64Logo = e.target.result;
-            localStorage.setItem(LOGO_KEY, base64Logo);
-
-            // Update displayed logo immediately
-            const appLogo = document.getElementById('appLogo');
-            if (appLogo) appLogo.src = base64Logo;
-
-            // Update preview if it exists (optional)
-            // Save to companyInfo as well if intended structure uses it, 
-            // but LOGO_KEY is the primary source currently.
-
-            showToast('Logo mis à jour avec succès', 'success');
-        };
-
-        reader.readAsDataURL(file);
-    }
-}
+// Duplicate handleLogoUploadFromSettings removed to keep code clean and unified.
 
 function populateSettingsForm() {
     // Populate Company Info
@@ -4583,6 +4624,8 @@ function updateThemeColor(color) {
     // Sync to Dexie for cross-page sync
     syncDataAcrossPages('appSettings', 'put', { key: THEME_COLOR_KEY, value: color });
     applyThemeColor();
+    // Trigger Firestore sync so other devices receive the new theme colour
+    if (typeof _debouncedStockSyncUp === 'function') _debouncedStockSyncUp();
 }
 
 function applyThemeColor() {
@@ -5862,15 +5905,22 @@ function handleClientSupplierLogoUpload(input) {
     const preview = document.getElementById('client-logo-preview');
     preview.innerHTML = '';
     if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.className = 'h-12 w-12 object-contain border rounded';
-            preview.appendChild(img);
-            preview.dataset.logo = e.target.result;
-        };
-        reader.readAsDataURL(input.files[0]);
+        const file = input.files[0];
+        if (typeof showToast === 'function') showToast('Compression de l\'image en cours...', 'info');
+        compressImage(file, 300, 300, 0.7)
+            .then(({ dataUrl }) => {
+                const img = document.createElement('img');
+                img.src = dataUrl;
+                img.className = 'h-12 w-12 object-contain border rounded';
+                preview.appendChild(img);
+                preview.dataset.logo = dataUrl;
+
+                if (typeof showToast === 'function') showToast('Image chargée (base64) !', 'success');
+            })
+            .catch(err => {
+                console.error('Erreur compression logo:', err);
+                alert('Erreur lors du traitement de l\'image.');
+            });
     } else {
         preview.dataset.logo = '';
     }

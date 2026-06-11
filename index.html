@@ -1765,18 +1765,53 @@
         // RH Data key (stored in rhDb, not synchronized)
         const RH_APP_DATA_KEY = 'rh_app_data';
 
-        // Wrappers for shared parameters via localStorage (backed by sharedDb)
+        // Wrappers for shared parameters via localStorage (backed by sharedDb/Dexie appSettings)
         async function dbSetItem(key, value) {
             localStorage.setItem(key, value);
+            try {
+                if (typeof db !== 'undefined' && db.appSettings) {
+                    await db.appSettings.put({ key, value, timestamp: Date.now() });
+                }
+            } catch (err) {
+                console.warn('dbSetItem Dexie error:', err);
+            }
         }
         async function dbGetItem(key) {
-            return localStorage.getItem(key);
+            let val = localStorage.getItem(key);
+            if (!val) {
+                try {
+                    if (typeof db !== 'undefined' && db.appSettings) {
+                        const item = await db.appSettings.get(key);
+                        if (item) {
+                            val = item.value;
+                            localStorage.setItem(key, val);
+                        }
+                    }
+                } catch (err) {
+                    console.warn('dbGetItem Dexie error:', err);
+                }
+            }
+            return val;
         }
         function dbRemoveItem(key) {
-            return localStorage.removeItem(key);
+            localStorage.removeItem(key);
+            try {
+                if (typeof db !== 'undefined' && db.appSettings) {
+                    db.appSettings.delete(key);
+                }
+            } catch (err) {
+                console.warn('dbRemoveItem Dexie error:', err);
+            }
         }
         function dbClear() {
-            return localStorage.clear();
+            localStorage.clear();
+            try {
+                if (typeof db !== 'undefined' && db.appSettings) {
+                    db.appSettings.clear();
+                }
+            } catch (err) {
+                console.warn('dbClear Dexie error:', err);
+            }
         }
 
         // Wrappers for RH data (stored in rhDb, NOT synchronized)
@@ -4022,16 +4057,29 @@
                         
                         // 2. Process shared settings if they are in the state
                         if (state.companyInfo) {
-                            await db.appSettings.put({ key: COMPANY_KEY, value: JSON.stringify(state.companyInfo), timestamp: Date.now() });
+                            const ciString = JSON.stringify(state.companyInfo);
+                            await db.appSettings.put({ key: COMPANY_KEY, value: ciString, timestamp: Date.now() });
+                            localStorage.setItem(COMPANY_KEY, ciString);
+                            if (typeof companyName !== 'undefined') {
+                                companyName.value = parseCompanyName(ciString);
+                            }
                         }
                         if (state.logo) {
                             await db.appSettings.put({ key: LOGO_KEY, value: state.logo, timestamp: Date.now() });
+                            localStorage.setItem(LOGO_KEY, state.logo);
+                            if (typeof logoSrc !== 'undefined') {
+                                logoSrc.value = state.logo;
+                            }
                         }
                         if (state.theme) {
                             await db.appSettings.put({ key: THEME_KEY, value: state.theme, timestamp: Date.now() });
+                            localStorage.setItem(THEME_KEY, state.theme);
                         }
                         if (state.themeColor) {
                             await db.appSettings.put({ key: THEME_COLOR_KEY, value: state.themeColor, timestamp: Date.now() });
+                            localStorage.setItem(THEME_COLOR_KEY, state.themeColor);
+                            document.documentElement.style.setProperty('--brand-green', state.themeColor);
+                            document.documentElement.style.setProperty('--brand-dark', state.themeColor);
                         }
                     } finally {
                         // Toujours libérer le verrou, même en cas d'erreur
